@@ -1,8 +1,0 @@
-.star-rating {
-  display: flex;
-
-  span {
-    cursor: pointer;
-    @include gradientText($gradientPurple);
-  }
-}

@@ -1,8 +1,0 @@
-mixin pie-chart(data, total)
-    div.pie-chart
-        div.pie-chart__canvas-wrapper
-            canvas.pie-chart__canvas
-        div.pie-chart__content
-            ul.pie-chart__list(data-total=total)
-                each item in data
-                    li.pie-chart__list-item(data-name=item.name data-value=item.value data-color=item.color)=item.name
