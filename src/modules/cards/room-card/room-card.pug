@@ -1,0 +1,32 @@
+//- Connect mixins
+include ../../common/room-number/room-number.pug
+include ../../common/room-price/room-price.pug
+include ../../ui/star-rating/star-rating.pug
+
+mixin room-card(number, type, price, rating, reviews, images)
+    div.room-card
+        div.swiper(class="room-card__swiper")
+            div.swiper-wrapper
+                each img in images
+                    div.swiper-slide
+                        div.room-card__img-ibg
+                            a.room-card__link(href="room.html") 
+                                img.room-card__img(src=img alt="Room")
+            div.swiper-pagination
+            div.swiper-button-prev
+                <span class="material-icons">chevron_left</span>
+            div.swiper-button-next
+                <span class="material-icons">chevron_right</span>
+        div.room-card__info
+            div.room-card__info-main
+                div.room-card__info-number
+                    +room-number(number)
+                    span.room-card__info-type=type
+                div.room-card__info-price
+                    +room-price(price)
+            div.room-card__info-rating
+                +star-rating(rating)
+                div.room-card__info-reviews 
+                    span.room-card__info-reviews-number= reviews
+                    span.room-card__info-reviews-text &nbsp;Отзывов
+

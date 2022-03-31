@@ -1,0 +1,93 @@
+.register-card {
+  @extend %cardStyle;
+  width: 380px;
+  max-width: 380px;
+
+  @include maxMobileSmall {
+    width: auto;
+  }
+
+  &__title {
+    margin: 0 0 20px 0;
+
+    @include maxMobileSmall {
+      text-align: center;
+    }
+  }
+
+  &__birthdate-title,
+  &__auth-title {
+    margin: 0 0 5px 0;
+  }
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    margin: 0 0 30px 0;
+  }
+
+  &__text-field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  &__name {
+  }
+  &__name-label {
+  }
+  &__name-field {
+  }
+  &__surname-label {
+  }
+  &__surname-field {
+  }
+
+  &__gender {
+    display: flex;
+    gap: 20px;
+  }
+  &__gender,
+  &__offers {
+    margin: -10px 0 0 0;
+  }
+  &__gender-field {
+  }
+  &__birthdate {
+  }
+  &__birthdate-label {
+  }
+  &__birthdate-field {
+  }
+  &__auth-info {
+  }
+  &__email-label {
+  }
+  &__email-field {
+  }
+  &__password-label {
+  }
+  &__password-field {
+  }
+
+  &__submit-wrapper {
+  }
+  &__auth {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    @include maxMobileSmall {
+      flex-direction: column;
+      gap: 20px;
+    }
+  }
+  &__auth-text {
+    color: $black;
+    font-size: rem(14);
+    font-weight: 400;
+    line-height: calc(18 / 14 * 100%);
+  }
+  &__auth-btn {
+  }
+}

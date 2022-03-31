@@ -1,0 +1,197 @@
+.header {
+  padding: 18px 0;
+  &__container {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+  }
+  &__logo {
+  }
+
+  &__icon-menu {
+  }
+  &__nav {
+    @include maxTablet {
+      background: $white;
+
+      display: none;
+
+      position: absolute;
+      top: 120%;
+      left: 50%;
+
+      width: 100%;
+      height: 100vh;
+
+      z-index: 10;
+      transform: translate(-50%);
+    }
+
+    &--active {
+      display: block;
+
+      -webkit-animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+      animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+    }
+  }
+  &__nav-list {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    @include maxTablet {
+      flex-direction: column;
+      padding: 50px 0 0 0;
+      gap: 40px;
+    }
+  }
+  &__nav-list-item {
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+
+    transition: color $Transition;
+
+    &:hover,
+    &:hover span {
+      color: $purple;
+    }
+
+    &--active {
+      color: rgba($dark-shade, 0.75);
+      font-weight: 700;
+    }
+
+    span {
+      color: rgba($dark-shade, 0.5);
+      transition: color $Transition;
+
+      @include maxTablet {
+        display: none;
+      }
+    }
+  }
+  &__nav-link {
+    color: rgba($dark-shade, 0.5);
+    font-size: rem(14);
+    font-weight: 400;
+    line-height: calc(17 / 14 * 100%);
+
+    transition: color $Transition;
+
+    &:hover {
+      color: $purple;
+    }
+
+    @include maxTablet {
+      font-size: rem(18);
+    }
+  }
+
+  &__nav-link-icon {
+    font-size: rem(21);
+  }
+  &__nav-btn {
+    @extend %hoverButton;
+
+    font-size: rem(12);
+    font-weight: 700;
+    line-height: calc(15 / 12 * 100%);
+    text-transform: uppercase;
+
+    padding: 9px 20px;
+
+    @include maxTablet {
+      font-size: rem(16);
+      padding: 14px 30px;
+    }
+
+    &--login {
+      @include gradientBorder($gradientPurple, 2px, 22px);
+      color: $purple;
+
+      @include maxTablet {
+        @include gradientBorder($gradientPurple, 2px, 44px);
+      }
+    }
+
+    &--register {
+      background: $gradientPurple;
+      color: $white;
+
+      border-radius: 22px;
+
+      @include maxTablet {
+        border-radius: 44px;
+        margin: -15px 0 0 0;
+      }
+    }
+  }
+}
+
+/* ================= Mobile Menu Toggle ================= */
+
+.icon-menu {
+  display: none;
+
+  position: relative;
+  width: rem(30);
+  height: rem(18);
+  cursor: pointer;
+  z-index: 5;
+
+  &:hover {
+    span,
+    &:before,
+    &:after {
+      background-color: $purple;
+    }
+  }
+
+  span,
+  &::before,
+  &::after {
+    content: '';
+    transition: all 0.3s ease 0s;
+    right: 0;
+    position: absolute;
+    width: 100%;
+    height: rem(2);
+    background-color: #000;
+  }
+
+  &::before {
+    top: 0;
+  }
+
+  &::after {
+    bottom: 0;
+  }
+
+  span {
+    top: calc(50% - rem(1));
+  }
+
+  &--toggled {
+    span {
+      width: 0;
+    }
+
+    &::before {
+      top: calc(50% - rem(1));
+      transform: rotate(-45deg);
+    }
+    &::after {
+      bottom: calc(50% - rem(1));
+      transform: rotate(45deg);
+    }
+  }
+
+  @include maxTablet {
+    display: block;
+  }
+}

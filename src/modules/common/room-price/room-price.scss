@@ -1,0 +1,14 @@
+.room-price {
+  color: rgba($dark-shade, 0.5);
+  line-height: calc(18 / 14 * 100%);
+
+  &__number {
+    font-size: rem(14);
+    font-weight: 700;
+  }
+
+  &__text {
+    font-size: rem(12);
+    font-weight: 400;
+  }
+}

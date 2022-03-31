@@ -1,0 +1,9 @@
+- var minRating = 0;
+- var maxRating = 5;
+
+mixin star-rating(rating)
+    div.star-rating
+        -for(var i = minRating; i < rating; i++)
+            <span class="material-icons">star</span>
+        -for(var j = minRating; j < maxRating - rating; j++)
+            <span class="material-icons">star_outline</span>

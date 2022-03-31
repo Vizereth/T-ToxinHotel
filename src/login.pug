@@ -1,0 +1,12 @@
+doctype html 
+html(lang="ru")
+    include pug/head.pug
+    body
+        div.wrapper 
+            include modules/header/header.pug 
+            main.page
+                section.login 
+                    div.login__container
+                        div.login__content
+                            include modules/cards/login-card/login-card.pug
+            include modules/footer/footer.pug

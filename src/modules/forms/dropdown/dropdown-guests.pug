@@ -1,0 +1,33 @@
+div.dropdown(class="dropdown--full-round") 
+    label.dropdown__label 
+        input.dropdown__field(class="text-field" value="Сколько гостей" type="text" disabled="true")
+    button.dropdown__btn(type="button")
+        <span class="material-icons">expand_more</span>
+    div.dropdown__collapsible 
+        div.dropdown__collapsible-row(data-type="adults" data-min="0" data-max="10")
+            h3.dropdown__collapsible-title взрослые
+            div.dropdown__collapsible-count
+                button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--dec" type="button") 
+                    <span class="material-icons">remove</span>
+                h3.dropdown__collapsible-counter 0
+                button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--inc" type="button") 
+                    <span class="material-icons">add</span>
+        div.dropdown__collapsible-row(data-type="children" data-min="0" data-max="10") 
+            h3.dropdown__collapsible-title дети
+            div.dropdown__collapsible-count
+                button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--dec" type="button") 
+                    <span class="material-icons">remove</span>
+                h3.dropdown__collapsible-counter 0
+                button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--inc" type="button") 
+                    <span class="material-icons">add</span>
+        div.dropdown__collapsible-row(data-type="babies" data-min="0" data-max="10")
+            h3.dropdown__collapsible-title младенцы
+            div.dropdown__collapsible-count
+                button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--dec" type="button") 
+                    <span class="material-icons">remove</span>
+                h3.dropdown__collapsible-counter 0
+                button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--inc" type="button") 
+                    <span class="material-icons">add</span>
+        div.dropdown__collapsible-controls(class="dropdown__collapsible-controls--active") 
+            button.dropdown__collapsible-control(class="dropdown__collapsible-control--reset" type="button") очистить
+            button.dropdown__collapsible-control(class="dropdown__collapsible-control--save" type="button") применить

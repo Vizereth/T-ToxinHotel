@@ -1,0 +1,15 @@
+.subscribe {
+  position: relative;
+
+  &__input {
+    max-width: 267px;
+  }
+
+  &__btn {
+    @include textFieldIcon(44px);
+    @include gradientText($gradientPurple);
+    @extend %hoverIcon;
+
+    color: $purple;
+  }
+}

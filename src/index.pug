@@ -1,0 +1,14 @@
+doctype html 
+html(lang="ru")
+  include pug/head.pug
+  body
+    div.wrapper 
+      include modules/header/header.pug 
+      main.page
+        section.home
+          div.home__container
+            div.home__column(class="home__column--1")
+              include modules/cards/find-room-card/find-room-card.pug
+            div.home__column(class="home__column--2") 
+              div.home__text(class="common-text") Лучшие номера для вашей работы, отдыха и просто вдохновения
+      include modules/footer/footer.pug

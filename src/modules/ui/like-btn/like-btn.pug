@@ -1,0 +1,7 @@
+mixin like-btn(count, liked)
+    div.like-btn(class=liked==true ? 'like-btn--active' : '')
+        div.like-btn__icon(class="like-btn__icon--normal")
+            span.material-icons favorite_border
+        div.like-btn__icon(class="like-btn__icon--active")
+            span.material-icons favorite
+        div.like-btn__count=count

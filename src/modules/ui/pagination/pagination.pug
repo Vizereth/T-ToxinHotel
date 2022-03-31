@@ -1,0 +1,14 @@
+-var maxNumber = 3;
+
+mixin pagination(n)
+    div.pagination
+        ul.pagination__list
+            -for(var i = 1; i <= maxNumber; i++)
+                if(i == 1)
+                    li.pagination__list-item(class="pagination__list-item--active")=i
+                li.pagination__list-item=i
+            li.pagination__list-item ...
+            li.pagination__list-item=n
+            li.pagination__list-item(class="pagination__list-item--next")
+                <span class="material-icons">arrow_forward</span>
+        span.pagination__text 1 – 12 из 100+ вариантов аренды

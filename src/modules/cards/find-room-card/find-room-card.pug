@@ -1,0 +1,21 @@
+div.find-room-card 
+    h1.find-room-card__title Найдём номера под ваши пожелания
+    form.find-room-card__form(action="POST")
+        div.find-room-card__form-row(class="find-room-card__form-row--1")
+            div.find-room-card__form-field 
+                h3.find-room-card__form-field-title прибытие
+                include ../../forms/date-dropdown/date-dropdown.pug
+            div.find-room-card__form-field 
+                h3.find-room-card__form-field-title выезд
+                include ../../forms/date-dropdown/date-dropdown.pug
+        div.find-room-card__form-row(class="find-room-card__form-row--2") 
+            div.find-room-card__form-field 
+                h3.find-room-card__form-field-title гости
+                include ../../forms/dropdown/dropdown-guests.pug
+        div.find-room-card__form-row(class="find-room-card__form-row--3") 
+            div.find-room-card__form-submit
+                div.submit-btn
+                    button.submit-btn__btn(type="submit") 
+                        a.find-room-card__link(href="rooms.html") подобрать номер
+                    div.submit-btn__icon 
+                        <span class="material-icons">arrow_forward</span>

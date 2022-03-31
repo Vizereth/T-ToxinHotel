@@ -1,0 +1,38 @@
+//- Connect mixins
+include ../../forms/toggle/toggle.pug
+
+div.register-card
+    h1.register-card__title Регистрация аккаунта
+    form.register-card__form
+        div.register-card__name 
+            div.register-card__text-field-row
+                label.register-card__name-label 
+                    input.register-card__name-field(class="text-field" type="text" placeholder="Имя")
+                label.register-card__surname-label
+                    input.register-card__surname-field(class="text-field" type="text" placeholder="Фамилия")
+        div.register-card__gender 
+            label.radio-btn Мужчина
+                input.radio-btn__input(class="register-card__gender-field" type="radio" name="gender") 
+            label.radio-btn Женщина
+                input.radio-btn__input(class="register-card__gender-field"  type="radio" name="gender") 
+        div.register-card__birthdate
+            h3.register-card__birthdate-title дата рождения
+            label.register-card__birthdate-label
+                input.text-field(class="register-card__birthdate-field" type="text" placeholder="ДД.ММ.ГГГГ")
+        div.register-card__auth-info
+            h3.register-card__auth-title данные для входа в сервис
+            div.register-card__text-field-row
+                label.register-card__email-label
+                    input.register-card__email-field(class="text-field" type="text" placeholder="Email")
+                label.register-card__password-label
+                    input.register-card__password-field(class="text-field" type="text" placeholder="Пароль")
+        div.register-card__offers
+                +toggle("Получать спецпредложения")
+        div.register-card__submit-wrapper
+            div.submit-btn
+                button.submit-btn__btn(class="register-card__submit" type="submit") зарегистрироваться
+                div.submit-btn__icon 
+                    <span class="material-icons">arrow_forward</span>
+    div.register-card__auth
+        div.register-card__auth-text Уже есть аккаунт на Toxin
+        a.btn-outlined(class="register-card__auth-btn" href="login.html") войти

@@ -1,0 +1,127 @@
+.dropdown {
+  position: relative;
+
+  &--half-round {
+    .dropdown__field {
+      border-radius: 4px 4px 0 0;
+    }
+  }
+
+  &--expanded {
+    .dropdown__field {
+      border: 1px solid rgba($dark-shade, 0.5);
+    }
+
+    .dropdown__collapsible {
+      display: flex;
+    }
+  }
+
+  &__field {
+    user-select: none;
+  }
+
+  &__btn {
+    @include textFieldIcon(44px);
+    @extend %hoverIcon;
+  }
+
+  &__collapsible {
+    background-color: $white;
+
+    position: absolute;
+    top: 42px;
+    left: 0;
+    z-index: 10;
+
+    display: none;
+    flex-direction: column;
+    gap: 7px;
+
+    width: 100%;
+
+    border: 1px solid rgba($dark-shade, 0.5);
+    border-radius: 0 0 4px 4px;
+
+    padding: 7px 7px 7px 15px;
+  }
+
+  &__collapsible-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__collapsible-count {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+  }
+
+  &__collapsible-btn {
+    user-select: none;
+    cursor: pointer;
+
+    width: 30px;
+    height: 30px;
+
+    border: 1px solid rgba($dark-shade, 0.25);
+    border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    span {
+      color: rgba($dark-shade, 0.5);
+      font-size: rem(15);
+      text-align: center;
+      line-height: 100%;
+    }
+
+    &:disabled {
+      pointer-events: none;
+      color: rgba($dark-shade, 0.05);
+      border: 1px solid rgba($dark-shade, 0.05);
+    }
+
+    &:hover {
+      border: 1px solid rgba($dark-shade, 0.5);
+      transition: all $Transition;
+
+      span {
+        color: rgba($dark-shade, 0.75);
+        transition: color $Transition;
+      }
+    }
+  }
+
+  &__collapsible-controls {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+
+    margin: 12px 0 7px 0;
+
+    &--active {
+      display: flex;
+    }
+  }
+
+  &__collapsible-control {
+    @extend %hoverButton;
+
+    color: $purple;
+    font-size: rem(12);
+    font-weight: 700;
+    line-height: calc(15 / 12 * 100%);
+
+    text-transform: uppercase;
+
+    &--reset {
+    }
+
+    &--save {
+    }
+  }
+}

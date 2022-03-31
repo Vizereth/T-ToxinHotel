@@ -1,0 +1,13 @@
+.register {
+  @include bgImg($registerBG);
+
+  &__container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &__content {
+    padding: 20px 0;
+  }
+}

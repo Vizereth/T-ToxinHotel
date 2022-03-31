@@ -1,0 +1,58 @@
+.login-card {
+  @extend %cardStyle;
+
+  width: 380px;
+  max-width: 380px;
+
+  @include maxMobileSmall {
+    width: auto;
+  }
+
+  &__title {
+    margin: 0 0 20px 0;
+
+    @include maxMobileSmall {
+      text-align: center;
+    }
+  }
+  &__form {
+    margin: 0 0 30px 0;
+  }
+
+  &__text-field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  &__email-label {
+  }
+  &__email-field {
+  }
+  &__password-label {
+  }
+  &__password-field {
+  }
+  &__submit-wrapper {
+    margin: 20px 0 0 0;
+  }
+  &__submit {
+  }
+  &__create {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+
+    @include maxMobileSmall {
+      flex-direction: column;
+    }
+  }
+  &__create-text {
+    color: $black;
+    font-size: rem(14);
+    font-weight: 400;
+    line-height: calc(18 / 14 * 100%);
+  }
+  &__create-btn {
+  }
+}

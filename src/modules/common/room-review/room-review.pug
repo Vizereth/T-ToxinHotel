@@ -1,0 +1,13 @@
+//- Connect mixinx
+include ../../ui/like-btn/like-btn.pug
+
+mixin room-review(img, name, date, quote, likes, liked)
+    div.room-review
+        div.room-review__img
+            img(src=img, alt="Avatar")
+        div.room-review__user
+            div.room-review__user-name=name
+            div.room-review__user-date=date
+        div.room-review__like
+            +like-btn(likes, liked)
+        div.room-review__quote=quote

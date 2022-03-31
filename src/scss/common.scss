@@ -1,0 +1,99 @@
+h1 {
+  color: $dark-shade;
+  font-weight: 700;
+  font-size: rem(24);
+  line-height: calc(30 / 24 * 100%);
+}
+
+h2 {
+  color: $dark-shade;
+  font-weight: 700;
+  font-size: rem(19);
+  line-height: calc(24 / 19 * 100%);
+}
+
+h3 {
+  color: $dark-shade;
+  font-weight: 700;
+  font-size: rem(12);
+  line-height: calc(15 / 12 * 100%);
+  text-transform: uppercase;
+}
+
+.common-text {
+  color: $mainColor;
+  font-weight: 400;
+  font-size: rem(14);
+  line-height: 171%;
+}
+
+.text-field {
+  width: 100%;
+
+  font-size: rem(14);
+  font-weight: 400;
+
+  border: 1px solid rgba($dark-shade, 0.25);
+  border-radius: 4px;
+
+  padding: 12px 20% 12px 15px;
+  transition: all $Transition;
+
+  &::placeholder {
+    color: rgba($dark-shade, 0.25);
+    font-size: rem(14);
+    font-weight: 400;
+    line-height: calc(18 / 14 * 100%);
+    text-transform: capitalize;
+    transition: all $Transition;
+  }
+  &:hover {
+    border: 1px solid rgba($dark-shade, 0.5);
+  }
+}
+
+.checkbox {
+  min-width: 20px;
+  min-height: 20px;
+
+  max-width: 20px;
+  max-height: 20px;
+
+  border: 1px solid rgba($dark-shade, 0.25);
+  border-radius: 4px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  transition: all $Transition;
+
+  &:checked,
+  &:checked:hover {
+    border: 1px solid $purple;
+  }
+
+  &:before {
+    content: $checkIcon;
+    transform: scale(0);
+    transition: transform $Transition;
+  }
+
+  &:checked:before {
+    transform: scale(1);
+  }
+}
+
+.btn-outlined {
+  @include gradientBorder($gradientPurple, 2px, 22px);
+  @extend %textButton;
+
+  color: $purple;
+
+  padding: 14px 20px;
+  transition: opacity $Transition;
+
+  &:hover {
+    opacity: 0.5;
+  }
+}
