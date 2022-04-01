@@ -554,7 +554,7 @@ h3 {
 }
 
 .checkbox:before {
-  content: url("../img/svg/check.svg");
+  content: url("img/svg/check.svg");
   -webkit-transform: scale(0);
       -ms-transform: scale(0);
           transform: scale(0);
@@ -605,7 +605,7 @@ h3 {
 }
 
 .no-webp .home {
-  background-image: url("../img/background/home.jpg"); }
+  background-image: url("img/background/home.jpg"); }
 
 .home {
   background-position: center center;
@@ -647,7 +647,7 @@ h3 {
 }
 
 .no-webp .register {
-  background-image: url("../img/background/register.jpg"); }
+  background-image: url("img/background/register.jpg"); }
 
 .register {
   background-position: center center;
@@ -672,7 +672,7 @@ h3 {
 }
 
 .no-webp .login {
-  background-image: url("../img/background/register.jpg"); }
+  background-image: url("img/background/register.jpg"); }
 
 .login {
   background-position: center center;
@@ -4168,8 +4168,8 @@ button.swiper-pagination-bullet {
   }
 }
 
-.webp .home { background-image: url(../img/background/home.webp); }
+.webp .home { background-image: url(img/background/home.webp); }
 
-.webp .register { background-image: url(../img/background/register.webp); }
+.webp .register { background-image: url(img/background/register.webp); }
 
-.webp .login { background-image: url(../img/background/register.webp); }
+.webp .login { background-image: url(img/background/register.webp); }
