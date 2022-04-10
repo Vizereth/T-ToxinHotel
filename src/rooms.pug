@@ -19,7 +19,7 @@ include modules/ui/pagination/pagination.pug
         },
         {
             number: 840, 
-            type: '', 
+            type: null, 
             price: '9 990₽', 
             rating: 4, 
             reviews: 65,
@@ -41,7 +41,7 @@ include modules/ui/pagination/pagination.pug
         },
         {
             number: 856, 
-            type: '', 
+            type: null, 
             price: '7 300₽', 
             rating: 5, 
             reviews: 19,
@@ -74,7 +74,7 @@ include modules/ui/pagination/pagination.pug
         },
         {
             number: 678, 
-            type: '', 
+            type: null, 
             price: '5 500₽', 
             rating: 5, 
             reviews: 45,
@@ -85,7 +85,7 @@ include modules/ui/pagination/pagination.pug
         },
         {
             number: 450, 
-            type: '', 
+            type: null, 
             price: '5 300₽', 
             rating: 4, 
             reviews: 39,
@@ -96,7 +96,7 @@ include modules/ui/pagination/pagination.pug
         },
         {
             number: 350, 
-            type: '', 
+            type: null, 
             price: '5 000₽', 
             rating: 3, 
             reviews: 77,
@@ -107,7 +107,7 @@ include modules/ui/pagination/pagination.pug
         },
         {
             number: 666, 
-            type: '', 
+            type: null, 
             price: '5 000₽', 
             rating: 5, 
             reviews: 25,
@@ -118,7 +118,7 @@ include modules/ui/pagination/pagination.pug
         },
         {
             number: 444, 
-            type: '', 
+            type: null, 
             price: '5 000₽', 
             rating: 3, 
             reviews: 15,
@@ -129,7 +129,7 @@ include modules/ui/pagination/pagination.pug
         },
         {
             number: 352, 
-            type: '', 
+            type: null, 
             price: '5 000₽', 
             rating: 3, 
             reviews: 55,
@@ -145,7 +145,7 @@ html(lang="ru")
     include pug/head.pug
     body
         div.wrapper 
-            include modules/header/header.pug 
+            include modules/common/header/header.pug 
             main.page
                 section.rooms 
                     div.rooms__container
@@ -194,4 +194,5 @@ html(lang="ru")
                                     +room-card(room.number, room.type, room.price, room.rating, room.reviews, room.images)
                             div.rooms__content-pagination
                                 +pagination(15)
-            include modules/footer/footer.pug
+            include modules/common/footer/footer.pug
+        include pug/js.pug

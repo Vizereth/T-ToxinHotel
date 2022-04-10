@@ -1,0 +1,51 @@
+//- Connect mixins
+include ../../common/room-number/room-number.pug
+include ../../common/room-price/room-price.pug
+include ../../forms/date-dropdown/date-dropdown.pug
+
+mixin book-card(number, type, typeGap, price)
+    div.book-card
+        div.book-card__header
+            div.book-card__room-info
+                +room-number(number, type, typeGap)
+            div.book-card__room-price
+                +room-price(price)
+        div.book-card__form-wrapper
+            form.book-card__form(action="POST")
+                div.book-card__form-row(class="book-card__form-row--1 range-datepicker")
+                    div.book-card__form-field 
+                        h3.book-card__form-field-title прибытие
+                        +date-dropdown("start")
+                    div.book-card__form-field 
+                        h3.book-card__form-field-title выезд
+                        +date-dropdown("end")
+                div.book-card__form-row(class="book-card__form-row--2") 
+                    div.book-card__form-field 
+                        h3.book-card__form-field-title гости
+                        include ../../forms/dropdown/dropdown-guests.pug
+                div.book-card__form-row(class="book-card__form-row--3")
+                    div.book-card__form-text-row
+                        span.book-card__form-text-primary 9 990₽ х 4 суток
+                        span.book-card__form-text-secondary 39 960₽
+                    div.book-card__form-text-row
+                        div.book-card__form-text-primary
+                            span.book-card__form-text Сбор за услуги: скидка 2 179₽
+                            span.book-card__form-tippy i
+                        span.book-card__form-text-secondary 0₽
+                    div.book-card__form-text-row
+                        div.book-card__form-text-primary
+                            span.book-card__form-text Сбор за дополнительные услуги
+                            span.book-card__form-tippy i
+                        span.book-card__form-text-secondary 300₽
+                    div.book-card__form-total
+                        span.book-card__form-total-text Итого
+                        span.book-card__form-total-border 
+                        span.book-card__form-total-number 38 080₽
+                div.book-card__form-row(class="book-card__form-row--4") 
+                    div.book-card__form-submit
+                        div.submit-btn
+                            button.submit-btn__btn(type="submit") забронировать
+                            div.submit-btn__icon 
+                                span.material-icons arrow_forward
+
+

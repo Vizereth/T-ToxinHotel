@@ -8,13 +8,14 @@ import './pie-chart.js';
 
 //Connect API, such as sliders, range sliders, scroll...
 import './sliders.js';
+import './datepicker.js';
 
 //Connect script files for pages
 import './pages/rooms.js';
 
 //Connect script files for common sections
-import '../../modules/header/header.js';
-import '../../modules/footer/footer.js';
+import '../../modules/common/header/header.js';
+import '../../modules/common/footer/footer.js';
 
 //Connect script files for form modules
 import '../../modules/forms/dropdown/dropdown.js';

@@ -3,10 +3,11 @@ html(lang="ru")
     include pug/head.pug
     body
         div.wrapper 
-            include modules/header/header.pug 
+            include modules/common/header/header.pug 
             main.page
                 section.register 
                     div.register__container
                         div.register__content
                             include modules/cards/register-card/register-card.pug
-            include modules/footer/footer.pug
+            include modules/common/footer/footer.pug
+        include pug/js.pug

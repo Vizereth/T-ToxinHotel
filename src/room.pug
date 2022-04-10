@@ -2,6 +2,9 @@
 include modules/common/room-feature/room-feature.pug
 include modules/common/room-review/room-review.pug
 include modules/common/pie-chart/pie-chart.pug
+include modules/common/room-number/room-number.pug
+include modules/common/room-price/room-price.pug
+include modules/cards/book-card/book-card.pug
 
 //- Data for votes pie chart
 - var votesTotal = 260;
@@ -17,7 +20,7 @@ html(lang="ru")
     include pug/head.pug
     body
         div.wrapper 
-            include modules/header/header.pug 
+            include modules/common/header/header.pug 
             main.page
                 section.room 
                     div.room__gallery 
@@ -26,33 +29,53 @@ html(lang="ru")
                         div.room__img(class="room__img--3" style="background-image: url(./img/room/03.jpg)")
                     div.room__container
                         div.room__content
-                            div.room__content-row(class="room__content-row--1")
-                                div.room__features
-                                    h2.room__features-title Сведения о номере
-                                    ul.room__features-list
-                                        li.room__features-list-item
-                                            +room-feature('insert_emoticon', 'Комфорт', 'Шумопоглощающие стены')
-                                        li.room__features-list-item
-                                            +room-feature('location_city', 'Удобство', 'Окно в каждой из спален')
-                                        li.room__features-list-item
-                                            +room-feature('whatshot', 'Уют', 'Номер оснащён камином')
-                                div.room__chart
-                                    h2.room__chart-title
-                                    +pie-chart(votesData, votesTotal)
-                            div.room__content-row
-                                div.room__reviews
-                                    div.room__reviews-header
-                                        h2.room__reviews-title Отзывы посетителей номера
-                                        div.room__reviews-count 2 отзыва
-                                    div.room__reviews-content
-                                        +room-review('img/users/murad.jpg', 
-                                            'Мурад Сарафанов', 
-                                            '5 дней назад', 
-                                            'Великолепный матрас на кровати в основной спальне! А пуфик вообще потрясающий. И стены, действительно, шумоподавляющие. Выкрикивал комплименты повару — никто не жаловался из соседей.', 
-                                            12, true)
-                                        +room-review('img/users/patricia.jpg', 
-                                            'Патрисия Стёклышкова', 
-                                            'Неделю назад',
-                                            'Обслуживание на высоте! Всё аккуратно, чисто. Завтраки в номер советую заказать, каждый день новое блюдо и десерт как комплимент',
-                                            2, false)
-            include modules/footer/footer.pug
+                            div.room__content-main
+                                div.room__content-row(class="room__content-row--1")
+                                    div.room__features
+                                        h2.room__features-title Сведения о номере
+                                        ul.room__features-list
+                                            li.room__features-list-item
+                                                +room-feature('insert_emoticon', 'Комфорт', 'Шумопоглощающие стены')
+                                            li.room__features-list-item
+                                                +room-feature('location_city', 'Удобство', 'Окно в каждой из спален')
+                                            li.room__features-list-item
+                                                +room-feature('whatshot', 'Уют', 'Номер оснащён камином')
+                                    div.room__chart
+                                        h2.room__chart-title Впечатления от номера
+                                        +pie-chart(votesData, votesTotal)
+                                div.room__content-row
+                                    div.room__reviews
+                                        div.room__reviews-header
+                                            h2.room__reviews-title Отзывы посетителей номера
+                                            div.room__reviews-count 2 отзыва
+                                        div.room__reviews-content
+                                            +room-review('img/users/murad.jpg', 
+                                                'Мурад Сарафанов', 
+                                                '5 дней назад', 
+                                                'Великолепный матрас на кровати в основной спальне! А пуфик вообще потрясающий. И стены, действительно, шумоподавляющие. Выкрикивал комплименты повару — никто не жаловался из соседей.', 
+                                                12, true)
+                                            +room-review('img/users/patricia.jpg', 
+                                                'Патрисия Стёклышкова', 
+                                                'Неделю назад',
+                                                'Обслуживание на высоте! Всё аккуратно, чисто. Завтраки в номер советую заказать, каждый день новое блюдо и десерт как комплимент',
+                                                2, false)
+                                div.room__content-row(class="room__content-row--3") 
+                                    div.room__rules
+                                        h2.room__rules-title Правила
+                                        ul.room__rules-list 
+                                            li.room__rules-list-item
+                                                span.room__rules-list-bullet
+                                                span.room__rules-list-text Нельзя с питомцами
+                                            li.room__rules-list-item
+                                                span.room__rules-list-bullet
+                                                span.room__rules-list-text Без вечеринок и мероприятий
+                                            li.room__rules-list-item
+                                                span.room__rules-list-bullet
+                                                span.room__rules-list-text Время прибытия — после 13:00, а выезд до 12:00    
+                                    div.room__cancel
+                                        h2.room__cancel-title Отмена
+                                        div.room__cancel-text Бесплатная отмена в течение 48 ч. После этого при отмене не позднее чем за 5 дн. до прибытия вы получите полный возврат за вычетом сбора за услуги.                                     
+                            div.room__content-card 
+                                +book-card("888", "Люкс", "gap", "9 990₽")
+            include modules/common/footer/footer.pug
+        include pug/js.pug

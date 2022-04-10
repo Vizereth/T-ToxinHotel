@@ -75,10 +75,6 @@ const config = {
   module: {
     rules: [
       {
-        test: /\.less$/i,
-        use: ["style-loader", "css-loader", "less-loader"],
-      },
-      {
         test: /\.(scss|css)$/,
         exclude: `${paths.src}/fonts`,
         use: [
@@ -138,6 +134,7 @@ const config = {
     ...pugPages.map(
       (pugPage) =>
         new HtmlWebpackPlugin({
+          inject: false,
           minify: false,
           template: `${srcFolder}/${pugPage}`,
           filename: `${pugPage.replace(/\.pug/, ".html")}`,

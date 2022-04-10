@@ -1,0 +1,105 @@
+.book-card {
+  @extend %cardStyle;
+  display: flex;
+  flex-direction: column;
+  row-gap: 20px;
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+  }
+
+  &__form-row {
+    &--1 {
+      display: flex;
+      gap: 20px;
+
+      @include maxMobileSmall {
+        flex-direction: column;
+      }
+    }
+
+    &--3 {
+      display: flex;
+      flex-direction: column;
+      row-gap: 10px;
+    }
+  }
+
+  &__form-field-title {
+    margin: 0 0 5px 0;
+  }
+
+  &__form-text-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+
+    font-size: rem(14);
+    line-height: calc(24 / 14 * 100%);
+  }
+
+  &__form-text-primary {
+    flex: 0 1 240px;
+
+    display: flex;
+    justify-content: space-between;
+
+    @include maxMobileSmall {
+      flex: 0 1 auto;
+    }
+  }
+
+  &__form-tippy {
+    flex: 0 0 auto;
+    cursor: pointer;
+
+    width: 20px;
+    height: 20px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: 1px solid rgba($dark-shade, 0.25);
+    border-radius: 50%;
+
+    color: rgba($dark-shade, 0.25);
+    font-weight: 700;
+    font-size: rem(12);
+    line-height: calc(14 / 12 * 100%);
+
+    transition: all $Transition;
+
+    &:hover {
+      color: rgba($dark-shade, 0.5);
+      border: 1px solid rgba($dark-shade, 0.5);
+    }
+  }
+
+  &__form-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    column-gap: 5px;
+
+    color: $dark-shade;
+    font-size: rem(19);
+    font-weight: 700;
+    line-height: calc(24 / 19 * 100%);
+
+    margin: 20px 0 0 0;
+  }
+
+  &__form-total-border {
+    flex: 1 1 auto;
+    border-bottom: 1px dashed rgba($dark-shade, 0.25);
+  }
+}

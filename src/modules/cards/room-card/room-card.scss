@@ -24,14 +24,6 @@
     gap: 1px;
   }
 
-  &__info-type {
-    color: $purple;
-    font-size: rem(12);
-    font-weight: 700;
-    line-height: calc(15 / 12 * 100%);
-    text-transform: uppercase;
-  }
-
   &__info-rating {
     display: flex;
     justify-content: space-between;

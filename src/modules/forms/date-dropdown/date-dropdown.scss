@@ -1,14 +1,19 @@
 .date-dropdown {
-  cursor: pointer;
   position: relative;
+  cursor: pointer;
 
   &__field {
+    @extend %noselect;
+    cursor: pointer;
     width: 100%;
+
+    &::placeholder {
+      color: rgba($dark-shade, 0.75);
+    }
   }
 
   &__btn {
     @include textFieldIcon(44px);
-    @extend %hoverIcon;
     color: rgba($dark-shade, 0.5);
   }
 }

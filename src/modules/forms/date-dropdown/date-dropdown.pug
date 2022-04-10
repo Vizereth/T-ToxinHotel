@@ -1,5 +1,6 @@
-div.date-dropdown 
-    label.date-dropdown__label
-        input.date-dropdown__field(class="text-field" type="text" value="ДД.ММ.ГГГГ" disabled="true")
-    button.date-dropdown__btn(type="button")
-        <span class="material-icons">expand_more</span>
+mixin date-dropdown(type)
+    div.date-dropdown(class=type=="start"?"date-dropdown--start":"date-dropdown--end")
+        label.date-dropdown__label(for="date-dropdown__input")
+        input.date-dropdown__field(id="date-dropdown__input" class="text-field" type="text" placeholder="ДД.ММ.ГГГГ" readonly="true" name=type=="start"?"start":"end")
+        button.date-dropdown__btn(type="button")
+            span.material-icons expand_more

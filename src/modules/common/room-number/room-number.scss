@@ -1,6 +1,15 @@
 .room-number {
-  color: $dark-shade;
-  font-weight: 700;
+  display: flex;
+  align-items: baseline;
+  
+  &--spaced {
+    gap: 8px;
+  }
+  &__number {
+    color: $dark-shade;
+    font-weight: 700;
+  }
+
   &__symbol {
     font-size: rem(14);
     line-height: calc(17 / 14 * 100%);
@@ -9,5 +18,13 @@
   &__number {
     font-size: rem(19);
     line-height: calc(23 / 14 * 100%);
+  }
+
+  &__type {
+    color: $purple;
+    font-size: rem(12);
+    font-weight: 700;
+    line-height: calc(15 / 12 * 100%);
+    text-transform: uppercase;
   }
 }

@@ -1,4 +1,6 @@
 .room {
+  border-bottom: 1px solid rgba($dark-shade, 0.25);
+
   &__gallery {
     background-color: rgba($black, 0.9);
 
@@ -46,24 +48,75 @@
 
   &__content {
     display: flex;
+    justify-content: space-between;
+    gap: 70px;
+    padding: 70px 0;
+
+    @include maxTablet {
+      flex-direction: column-reverse;
+    }
+  }
+
+  &__content-main {
+    display: flex;
     flex-direction: column;
     gap: 30px;
 
-    padding: 70px 0;
+    @include maxTablet {
+      gap: 60px;
+    }
+  }
+
+  &__content-card {
+    flex: 0 0 auto;
+    width: 380px;
+
+    @include maxTablet {
+      align-self: center;
+    }
+
+    @include maxMobileSmall {
+      width: 100%;
+    }
   }
 
   &__content-row {
     &--1 {
       display: flex;
       flex-wrap: wrap;
+      column-gap: 70px;
+      row-gap: 35px;
+
+      @include maxMobile {
+        flex-direction: column;
+        align-items:center;
+      }
+    }
+
+    &--3 {
+      display: flex;
       gap: 70px;
+
+      @include maxMobile {
+        flex-direction: column;
+        gap: 35px;
+      }
+
+      @include maxMobileSmall {
+        align-items: center;
+      }
     }
   }
 
+  &__features-title,
+  &__chart-title,
+  &__rules-title,
+  &__cancel-title {
+    margin: 0 0 20px 0;
+  }
+
   &__features {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 20px;
+    padding: 0 30px 0 0;
   }
 
   &__features-list {
@@ -87,6 +140,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+
+    @include maxMobileSmall {
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+    }
   }
 
   &__reviews-count {
@@ -100,5 +159,61 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 22px;
+  }
+
+  &__rules,
+  &__cancel {
+    flex: 0 1 340px;
+
+    @include maxMobile {
+      flex: 0 0 auto;
+      width: 50%;
+    }
+  }
+
+  &__rules-title {
+    margin-left: 20px;
+
+    @include maxMobile {
+      margin-left: 0;
+    }
+  }
+
+  &__rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__rules-list-item {
+    display: flex;
+    gap: 10px;
+
+    color: rgba($dark-shade, 0.75);
+    font-size: rem(14);
+    font-weight: 400;
+    line-height: calc(24 / 14 * 100%);
+  }
+
+  &__rules-list-bullet {
+    width: 10px;
+    height: 24px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &:after {
+      content: "";
+      background-color: rgba($dark-shade, 0.25);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+  }
+
+  &__cancel-text {
+    font-size: rem(14);
+    line-height: calc(24 / 14 * 100%);
   }
 }

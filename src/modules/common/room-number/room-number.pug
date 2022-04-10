@@ -1,4 +1,7 @@
-mixin room-number(number)
-    div.room-number
-        span.room-number__symbol №&nbsp;
-        span.room-number__number=number
+mixin room-number(number, type, gap)
+    div.room-number(class=type!=null&&gap=="gap"?"room-number--spaced":"room-number--compact")
+        div.room-number__number
+            span.room-number__symbol №&nbsp;
+            span.room-number__number=number
+        if (type != null)
+            div.room-number__type=type

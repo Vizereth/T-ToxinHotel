@@ -32,14 +32,17 @@ $purple: rgba(188, 156, 255, 1);
 $green: rgba(111, 207, 151, 1);
 
 $gradientPurple: linear-gradient(180deg, #bc9cff 0%, #8ba4f9 100%);
+$gradientPurple025: linear-gradient(180deg, rgba(188, 156, 255, 0.25) 0%, rgba(139, 164, 249, 0.25) 100%);
 $gradientGreen: linear-gradient(180deg, #6FCF97 0%, #66D2EA 100%);
+$gradientYellow: linear-gradient(180deg, #FFE39C 0%, #FFBA9C 100%);
+$gradientBlack: linear-gradient(180deg, #919191 0%, #3D4975 100%);
 
 // Transition Styles
 $Transition: 0.2s ease-in;
 
 // SVG Graphics
 
-$checkIcon: url("../img/svg/check.svg");
+$checkIcon: url("img/svg/check.svg");
 
 // Backgrounds
 $homeBG: url("../img/background/home.jpg");
@@ -175,8 +178,9 @@ This will be applied to all elements with class *__container. E.g. header__conta
 @import 'base';
 @import 'animations';
 
-// Connect common styles
+// Connect common styles and libs
 @import 'common';
+@import 'libs/datepicker.scss';
 
 // Connect page styles
 @import "pages/ui-kit";
@@ -189,14 +193,9 @@ This will be applied to all elements with class *__container. E.g. header__conta
 
 /* ================= Connect BEM modules ================= */
 
-// Connect common BEM modules
-@import '../modules/logo/logo';
-@import '../modules/header/header';
-@import '../modules/footer/footer';
-
 // Connect UI/FORM BEM modules
 
-@import '../modules/subscribe/subscribe';
+@import '../modules/forms/subscribe/subscribe';
 @import '../modules/forms/date-dropdown/date-dropdown';
 @import '../modules/forms/dropdown/dropdown';
 @import '../modules/forms/submit-btn/submit-btn';
@@ -216,6 +215,7 @@ This will be applied to all elements with class *__container. E.g. header__conta
 @import "../modules/cards/login-card/login-card";
 @import "../modules/cards/find-room-card/find-room-card";
 @import "../modules/cards/room-card/room-card";
+@import "../modules/cards/book-card/book-card";
 
 // Connect common block styles 
 
@@ -224,6 +224,11 @@ This will be applied to all elements with class *__container. E.g. header__conta
 @import "../modules/ui/pagination/pagination";
 @import "../modules/common/room-feature/room-feature";
 @import "../modules/common/room-review/room-review";
+@import "../modules/common/pie-chart/pie-chart";
+@import '../modules/common/logo/logo';
+@import '../modules/common/header/header';
+@import '../modules/common/footer/footer';
+
 
 
 

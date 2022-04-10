@@ -20,8 +20,7 @@ mixin room-card(number, type, price, rating, reviews, images)
         div.room-card__info
             div.room-card__info-main
                 div.room-card__info-number
-                    +room-number(number)
-                    span.room-card__info-type=type
+                    +room-number(number, type, "no-gap")
                 div.room-card__info-price
                     +room-price(price)
             div.room-card__info-rating

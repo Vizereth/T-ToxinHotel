@@ -1,10 +1,10 @@
-div.dropdown(class="dropdown--half-round") 
+div.dropdown(class="dropdown--half-round" data-type="features") 
     label.dropdown__label 
-        input.dropdown__field(class="text-field" value="2 спальни, 2 кровати..." type="text" disabled="true")
+        input.dropdown__field(class="text-field" placeholder="2 спальни, 2 кровати..." type="text" readonly="true")
     button.dropdown__btn(type="button")
         <span class="material-icons">expand_more</span>
     div.dropdown__collapsible 
-        div.dropdown__collapsible-row(data-type="bedrooms" data-min="0" data-max="10")
+        div.dropdown__collapsible-row(data-type="bedrooms" data-min="1" data-max="10")
             h3.dropdown__collapsible-title спальни
             div.dropdown__collapsible-count
                 button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--dec" type="button") 
@@ -12,7 +12,7 @@ div.dropdown(class="dropdown--half-round")
                 h3.dropdown__collapsible-counter 0
                 button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--inc" type="button") 
                     <span class="material-icons">add</span>
-        div.dropdown__collapsible-row(data-type="beds" data-min="0" data-max="10") 
+        div.dropdown__collapsible-row(data-type="beds" data-min="1" data-max="10") 
             h3.dropdown__collapsible-title кровати
             div.dropdown__collapsible-count
                 button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--dec" type="button") 
@@ -20,7 +20,7 @@ div.dropdown(class="dropdown--half-round")
                 h3.dropdown__collapsible-counter 0
                 button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--inc" type="button") 
                     <span class="material-icons">add</span>
-        div.dropdown__collapsible-row(data-type="bathrooms" data-min="0" data-max="10")
+        div.dropdown__collapsible-row(data-type="bathrooms" data-min="1" data-max="10")
             h3.dropdown__collapsible-title ванные комнаты
             div.dropdown__collapsible-count
                 button.dropdown__collapsible-btn(class="dropdown__collapsible-btn--dec" type="button") 

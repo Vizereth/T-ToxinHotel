@@ -8,7 +8,7 @@ const votesData = {
 };
 
 class PieChart {
-  constructor(el, data, total) {
+  constructor(el, data, total, fixWordFunction) {
     this.cvs = el;
     this.ctx = this.cvs.getContext('2d');
     this.width = 120;
@@ -27,6 +27,7 @@ class PieChart {
     };
 
     this.textColor = 'rgba(188, 156, 255, 1)';
+    this.fixWord = fixWordFunction;
   }
 
   init() {
@@ -88,7 +89,7 @@ class PieChart {
     const radius = this.width / 2 - lineWidth;
     const radiusFull = this.width / 2;
 
-    /* Each arc is separated by empty space, so this value will be substracted from the start angle and added to the end angle of an arc to separate it from other arcs. */
+    /* Each arc is separated by empty space of N units in width, so this value will be substracted from the start angle and added to the end angle of an arc to separate it from other arcs. */
     const space = (1 * Math.PI) / 180;
 
     let startAngle = this.sAngle;
@@ -126,6 +127,8 @@ class PieChart {
     const titleText = '700 12px Montserrat';
     const gap = 20; // distance between text elements
 
+    const word = this.fixWord(this.total);
+
     this.ctx.beginPath();
     this.ctx.font = numberText;
     this.ctx.textAlign = 'center';
@@ -137,7 +140,7 @@ class PieChart {
     this.ctx.font = titleText;
     this.ctx.textAlign = 'center';
     this.ctx.fillStyle = this.textColor;
-    this.ctx.fillText('ГОЛОСОВ', this.height / 2, this.width / 2 + gap); // FIX wording
+    this.ctx.fillText(word, this.height / 2, this.width / 2 + gap);
     this.ctx.closePath();
   }
 
@@ -151,6 +154,25 @@ class PieChart {
     });
   }
 }
+
+const fixVotesWord = (n) => {
+  const digitsArray = n.toString().split('');
+  const lastDigit = +digitsArray[digitsArray.length - 1];
+
+  let word;
+
+  if (lastDigit === 0) {
+    word = 'Голосов';
+  } else if (lastDigit === 1) {
+    word = 'Голос';
+  } else if (lastDigit > 0 && lastDigit < 5) {
+    word = 'Голоса';
+  } else if (lastDigit >= 5 && lastDigit <= 9) {
+    word = 'Голосов';
+  }
+
+  return word.toUpperCase();
+};
 
 const drawPieChart = (() => {
   const pieChart = document.querySelector('.pie-chart');
@@ -173,6 +195,5 @@ const drawPieChart = (() => {
     data.push(itemData);
   });
 
-  new PieChart(canvas, data, total).init();
+  new PieChart(canvas, data, total, fixVotesWord).init();
 })();
-

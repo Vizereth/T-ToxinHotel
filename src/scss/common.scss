@@ -40,6 +40,7 @@ h3 {
   transition: all $Transition;
 
   &::placeholder {
+    user-select: none;
     color: rgba($dark-shade, 0.25);
     font-size: rem(14);
     font-weight: 400;
@@ -87,10 +88,22 @@ h3 {
 .btn-outlined {
   @include gradientBorder($gradientPurple, 2px, 22px);
   @extend %textButton;
-
   color: $purple;
 
   padding: 14px 20px;
+  transition: opacity $Transition;
+
+  &:hover {
+    opacity: 0.5;
+  }
+}
+
+.btn-default {
+  @extend %textButton;
+  color: $purple;
+
+  border: none;
+  outline: none;
   transition: opacity $Transition;
 
   &:hover {

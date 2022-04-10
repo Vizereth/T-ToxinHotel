@@ -26,6 +26,7 @@ if (!pugPages.length) {
         indent_size: 3,
       },
       replace: [
+        { regex: /^<script defer src=".*"><\/script>$/, to: "" },
         { regex: "../img", to: "img" },
         { regex: "@img", to: "img" },
         { regex: "NEW_PROJECT_NAME", to: rootFolder },
@@ -57,14 +58,6 @@ const config = {
   },
   module: {
     rules: [
-      {
-        test: /\.less$/i,
-        use: [
-          "style-loader",
-          "css-loader",
-          "less-loader",
-        ],
-      },
       {
         test: /\.(scss|css)$/,
         use: [
@@ -126,6 +119,7 @@ const config = {
     ...pugPages.map(
       (pugPage) =>
         new HtmlWebpackPlugin({
+          inject: false,
           minify: false,
           template: `${srcFolder}/${pugPage}`,
           filename: `../${pugPage.replace(/\.pug/, ".html")}`,

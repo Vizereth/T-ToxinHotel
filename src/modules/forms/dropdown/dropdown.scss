@@ -18,12 +18,16 @@
   }
 
   &__field {
+    cursor: pointer;
     user-select: none;
+
+    &::placeholder {
+      color: rgba($dark-shade, 0.75);
+    }
   }
 
   &__btn {
     @include textFieldIcon(44px);
-    @extend %hoverIcon;
   }
 
   &__collapsible {
