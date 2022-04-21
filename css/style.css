@@ -2942,12 +2942,6 @@ h3 {
   gap: 30px;
 }
 
-.header__nav--active {
-  display: block;
-  -webkit-animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
-  animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
-}
-
 .header__nav-list {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -4766,6 +4760,14 @@ button.swiper-pagination-bullet {
 
   .footer__subscribe {
     margin: 0;
+  }
+}
+
+@media screen and (max-width: 61.99875em) and (max-width: 61.99875em) {
+  .header__nav--active {
+    display: block;
+    -webkit-animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+    animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
   }
 }
 
