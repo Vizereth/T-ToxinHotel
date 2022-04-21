@@ -8,11 +8,7 @@
     justify-content: space-between;
     gap: 30px;
   }
-  &__logo {
-  }
 
-  &__icon-menu {
-  }
   &__nav {
     @include maxTablet {
       background: $white;
@@ -28,15 +24,17 @@
 
       z-index: 10;
       transform: translate(-50%);
-    }
 
-    &--active {
-      display: block;
-
-      -webkit-animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
-      animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+      &--active {
+        @include maxTablet {
+          display: block;
+          -webkit-animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+          animation: fade-in 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+        }
+      }
     }
   }
+
   &__nav-list {
     display: flex;
     align-items: center;
@@ -48,6 +46,7 @@
       gap: 40px;
     }
   }
+
   &__nav-list-item {
     cursor: pointer;
 
