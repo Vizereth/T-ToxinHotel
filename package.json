@@ -13,7 +13,7 @@
 		"sprite": "gulp sprite",
 		"fonts": "gulp fonts --rewrite",
 		"deploy": "gulp deployFTP --build",
-		"deployGH": "gulp deployGH",
+		"deploygh": "gulp deployGH",
 		"zip": "gulp deployZIP --build",
 		"devbuild": "gulp build --build --nowebp",
 		"tmp": "gulp -f gulpfile.tmp.js",
