@@ -155,6 +155,12 @@ const config = {
           force: true,
         },
         {
+          from: `${srcFolder}/fonts/fontawesome`,
+          to: `fonts/fontawesome`,
+          noErrorOnMissing: true,
+          force: true,
+        },
+        {
           from: `${paths.src}/favicon.ico`,
           to: `./`,
           noErrorOnMissing: true,
