@@ -1,0 +1,3 @@
+-- FIX checkbox icon
+-- FIX room number gap
+-- FIX submit button on Home Page. Should be a link instead of proper submit
