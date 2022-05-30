@@ -10921,7 +10921,7 @@ h3 {
 }
 
 .checkbox:before {
-  content: url("img/svg/check.svg");
+  content: url("../img/svg/check.svg");
   -webkit-transform: scale(0);
       -ms-transform: scale(0);
           transform: scale(0);

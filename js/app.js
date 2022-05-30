@@ -1569,6 +1569,15 @@
                 });
             };
         }));
+        (() => {
+            const submitButtons = document.querySelectorAll('button[type="submit"]');
+            if (!submitButtons) return;
+            submitButtons.forEach((btn => {
+                btn.addEventListener("click", (e => {
+                    e.preventDefault();
+                }));
+            }));
+        })();
         class PieChart {
             constructor(el, data, total, fixWordFunction) {
                 this.cvs = el;
