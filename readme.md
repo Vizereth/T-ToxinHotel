@@ -1,4 +1,4 @@
-# Тестовое задание для MetaLamp #1 - Toxin Hotel
+### Тестовое задание для MetaLamp #1 - Toxin Hotel
 
 ## Deploy
 
