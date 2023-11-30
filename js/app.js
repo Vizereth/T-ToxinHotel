@@ -5085,9 +5085,6 @@
         window.addEventListener("load", (function(e) {
             initSliders();
         }));
-        function hasProperty(obj, prop) {
-            return Object.prototype.hasOwnProperty.call(obj, prop);
-        }
         function lastItemOf(arr) {
             return arr[arr.length - 1];
         }
@@ -5170,10 +5167,27 @@
             const baseDay = new Date(baseDate).getDay();
             return addDays(baseDate, dayDiff(dayOfWeek, weekStart) - dayDiff(baseDay, weekStart));
         }
-        function getWeek(date) {
+        function calcWeekNum(dayOfTheWeek, sameDayOfFirstWeek) {
+            return Math.round((dayOfTheWeek - sameDayOfFirstWeek) / 6048e5) + 1;
+        }
+        function getIsoWeek(date) {
             const thuOfTheWeek = dayOfTheWeekOf(date, 4, 1);
             const firstThu = dayOfTheWeekOf(new Date(thuOfTheWeek).setMonth(0, 4), 4, 1);
-            return Math.round((thuOfTheWeek - firstThu) / 6048e5) + 1;
+            return calcWeekNum(thuOfTheWeek, firstThu);
+        }
+        function calcTraditionalWeekNumber(date, weekStart) {
+            const startOfFirstWeek = dayOfTheWeekOf(new Date(date).setMonth(0, 1), weekStart, weekStart);
+            const startOfTheWeek = dayOfTheWeekOf(date, weekStart, weekStart);
+            const weekNum = calcWeekNum(startOfTheWeek, startOfFirstWeek);
+            if (weekNum < 53) return weekNum;
+            const weekOneOfNextYear = dayOfTheWeekOf(new Date(date).setDate(32), weekStart, weekStart);
+            return startOfTheWeek === weekOneOfNextYear ? 1 : weekNum;
+        }
+        function getWesternTradWeek(date) {
+            return calcTraditionalWeekNumber(date, 0);
+        }
+        function getMidEasternWeek(date) {
+            return calcTraditionalWeekNumber(date, 6);
         }
         function startOfYearPeriod(date, years) {
             const year = new Date(date).getFullYear();
@@ -5378,7 +5392,7 @@
             const criteria = "function" === typeof selector ? selector : el => el instanceof Element && el.matches(selector);
             return findFromPath(ev.composedPath(), criteria, ev.currentTarget);
         }
-        const locales = {
+        const base_locales = {
             en: {
                 days: [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ],
                 daysShort: [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ],
@@ -5396,14 +5410,14 @@
             beforeShowDecade: null,
             beforeShowMonth: null,
             beforeShowYear: null,
-            calendarWeeks: false,
-            clearBtn: false,
+            clearButton: false,
             dateDelimiter: ",",
             datesDisabled: [],
             daysOfWeekDisabled: [],
             daysOfWeekHighlighted: [],
             defaultViewDate: void 0,
             disableTouchKeyboard: false,
+            enableOnReadonly: true,
             format: "mm/dd/yyyy",
             language: "en",
             maxDate: null,
@@ -5419,19 +5433,35 @@
             showOnFocus: true,
             startView: 0,
             title: "",
-            todayBtn: false,
-            todayBtnMode: 0,
+            todayButton: false,
+            todayButtonMode: 0,
             todayHighlight: false,
             updateOnBlur: true,
+            weekNumbers: 0,
             weekStart: 0
         };
-        const options_defaultOptions = defaultOptions;
-        const {language: defaultLang, format: defaultFormat, weekStart: defaultWeekStart} = options_defaultOptions;
+        const {language: defaultLang, format: defaultFormat, weekStart: defaultWeekStart} = defaultOptions;
         function sanitizeDOW(dow, day) {
             return dow.length < 6 && day >= 0 && day < 7 ? pushUnique(dow, day) : dow;
         }
-        function calcEndOfWeek(startOfWeek) {
-            return (startOfWeek + 6) % 7;
+        function determineGetWeekMethod(numberingMode, weekStart) {
+            const methodId = 4 === numberingMode ? 6 === weekStart ? 3 : !weekStart + 1 : numberingMode;
+            switch (methodId) {
+              case 1:
+                return getIsoWeek;
+
+              case 2:
+                return getWesternTradWeek;
+
+              case 3:
+                return getMidEasternWeek;
+            }
+        }
+        function updateWeekStart(newValue, config, weekNumbers) {
+            config.weekStart = newValue;
+            config.weekEnd = (newValue + 6) % 7;
+            if (4 === weekNumbers) config.getWeekNumber = determineGetWeekMethod(4, newValue);
+            return newValue;
         }
         function validateDate(value, format, locale, origValue) {
             const date = parseDate(value, format, locale);
@@ -5441,17 +5471,27 @@
             const viewId = parseInt(value, 10);
             return viewId >= 0 && viewId <= max ? viewId : origValue;
         }
+        function replaceOptions(options, from, to, convert = void 0) {
+            if (from in options) {
+                if (!(to in options)) options[to] = convert ? convert(options[from]) : options[from];
+                delete options[from];
+            }
+        }
         function processOptions(options, datepicker) {
             const inOpts = Object.assign({}, options);
             const config = {};
             const locales = datepicker.constructor.locales;
-            const rangeSideIndex = datepicker.rangeSideIndex;
-            let {format, language, locale, maxDate, maxView, minDate, pickLevel, startView, weekStart} = datepicker.config || {};
+            const rangeEnd = !!datepicker.rangeSideIndex;
+            let {datesDisabled, format, language, locale, maxDate, maxView, minDate, pickLevel, startView, weekNumbers, weekStart} = datepicker.config || {};
+            replaceOptions(inOpts, "calendarWeeks", "weekNumbers", (val => val ? 1 : 0));
+            replaceOptions(inOpts, "clearBtn", "clearButton");
+            replaceOptions(inOpts, "todayBtn", "todayButton");
+            replaceOptions(inOpts, "todayBtnMode", "todayButtonMode");
             if (inOpts.language) {
                 let lang;
                 if (inOpts.language !== language) if (locales[inOpts.language]) lang = inOpts.language; else {
                     lang = inOpts.language.split("-")[0];
-                    if (void 0 === locales[lang]) lang = false;
+                    if (!locales[lang]) lang = false;
                 }
                 delete inOpts.language;
                 if (lang) {
@@ -5464,10 +5504,7 @@
                     if (language !== defaultLang) Object.assign(locale, locales[language]);
                     config.locale = locale;
                     if (format === origLocale.format) format = config.format = locale.format;
-                    if (weekStart === origLocale.weekStart) {
-                        weekStart = config.weekStart = locale.weekStart;
-                        config.weekEnd = calcEndOfWeek(locale.weekStart);
-                    }
+                    if (weekStart === origLocale.weekStart) weekStart = updateWeekStart(locale.weekStart, config, weekNumbers);
                 }
             }
             if (inOpts.format) {
@@ -5478,27 +5515,27 @@
                 delete inOpts.format;
             }
             let newPickLevel = pickLevel;
-            if (void 0 !== inOpts.pickLevel) {
-                newPickLevel = validateViewId(inOpts.pickLevel, 2);
+            if ("pickLevel" in inOpts) {
+                newPickLevel = validateViewId(inOpts.pickLevel, pickLevel, 2);
                 delete inOpts.pickLevel;
             }
             if (newPickLevel !== pickLevel) {
                 if (newPickLevel > pickLevel) {
-                    if (void 0 === inOpts.minDate) inOpts.minDate = minDate;
-                    if (void 0 === inOpts.maxDate) inOpts.maxDate = maxDate;
+                    if (!("minDate" in inOpts)) inOpts.minDate = minDate;
+                    if (!("maxDate" in inOpts)) inOpts.maxDate = maxDate;
                 }
-                if (!inOpts.datesDisabled) inOpts.datesDisabled = [];
+                if (datesDisabled && !inOpts.datesDisabled) inOpts.datesDisabled = [];
                 pickLevel = config.pickLevel = newPickLevel;
             }
             let minDt = minDate;
             let maxDt = maxDate;
-            if (void 0 !== inOpts.minDate) {
+            if ("minDate" in inOpts) {
                 const defaultMinDt = dateValue(0, 0, 1);
                 minDt = null === inOpts.minDate ? defaultMinDt : validateDate(inOpts.minDate, format, locale, minDt);
                 if (minDt !== defaultMinDt) minDt = regularizeDate(minDt, pickLevel, false);
                 delete inOpts.minDate;
             }
-            if (void 0 !== inOpts.maxDate) {
+            if ("maxDate" in inOpts) {
                 maxDt = null === inOpts.maxDate ? void 0 : validateDate(inOpts.maxDate, format, locale, maxDt);
                 if (void 0 !== maxDt) maxDt = regularizeDate(maxDt, pickLevel, true);
                 delete inOpts.maxDate;
@@ -5511,23 +5548,27 @@
                 if (maxDate !== maxDt) maxDate = config.maxDate = maxDt;
             }
             if (inOpts.datesDisabled) {
-                config.datesDisabled = inOpts.datesDisabled.reduce(((dates, dt) => {
-                    const date = parseDate(dt, format, locale);
-                    return void 0 !== date ? pushUnique(dates, regularizeDate(date, pickLevel, rangeSideIndex)) : dates;
-                }), []);
+                const dtsDisabled = inOpts.datesDisabled;
+                if ("function" === typeof dtsDisabled) {
+                    config.datesDisabled = null;
+                    config.checkDisabled = (timeValue, viewId) => dtsDisabled(new Date(timeValue), viewId, rangeEnd);
+                } else {
+                    const disabled = config.datesDisabled = dtsDisabled.reduce(((dates, dt) => {
+                        const date = parseDate(dt, format, locale);
+                        return void 0 !== date ? pushUnique(dates, regularizeDate(date, pickLevel, rangeEnd)) : dates;
+                    }), []);
+                    config.checkDisabled = timeValue => disabled.includes(timeValue);
+                }
                 delete inOpts.datesDisabled;
             }
-            if (void 0 !== inOpts.defaultViewDate) {
+            if ("defaultViewDate" in inOpts) {
                 const viewDate = parseDate(inOpts.defaultViewDate, format, locale);
                 if (void 0 !== viewDate) config.defaultViewDate = viewDate;
                 delete inOpts.defaultViewDate;
             }
-            if (void 0 !== inOpts.weekStart) {
+            if ("weekStart" in inOpts) {
                 const wkStart = Number(inOpts.weekStart) % 7;
-                if (!isNaN(wkStart)) {
-                    weekStart = config.weekStart = wkStart;
-                    config.weekEnd = calcEndOfWeek(wkStart);
-                }
+                if (!isNaN(wkStart)) weekStart = updateWeekStart(wkStart, config, weekNumbers);
                 delete inOpts.weekStart;
             }
             if (inOpts.daysOfWeekDisabled) {
@@ -5538,7 +5579,21 @@
                 config.daysOfWeekHighlighted = inOpts.daysOfWeekHighlighted.reduce(sanitizeDOW, []);
                 delete inOpts.daysOfWeekHighlighted;
             }
-            if (void 0 !== inOpts.maxNumberOfDates) {
+            if ("weekNumbers" in inOpts) {
+                let method = inOpts.weekNumbers;
+                if (method) {
+                    const getWeekNumber = "function" === typeof method ? (timeValue, startOfWeek) => method(new Date(timeValue), startOfWeek) : determineGetWeekMethod(method = parseInt(method, 10), weekStart);
+                    if (getWeekNumber) {
+                        weekNumbers = config.weekNumbers = method;
+                        config.getWeekNumber = getWeekNumber;
+                    }
+                } else {
+                    weekNumbers = config.weekNumbers = 0;
+                    config.getWeekNumber = null;
+                }
+                delete inOpts.weekNumbers;
+            }
+            if ("maxNumberOfDates" in inOpts) {
                 const maxNumberOfDates = parseInt(inOpts.maxNumberOfDates, 10);
                 if (maxNumberOfDates >= 0) {
                     config.maxNumberOfDates = maxNumberOfDates;
@@ -5551,14 +5606,14 @@
                 delete inOpts.dateDelimiter;
             }
             let newMaxView = maxView;
-            if (void 0 !== inOpts.maxView) {
+            if ("maxView" in inOpts) {
                 newMaxView = validateViewId(inOpts.maxView, maxView);
                 delete inOpts.maxView;
             }
             newMaxView = pickLevel > newMaxView ? pickLevel : newMaxView;
             if (newMaxView !== maxView) maxView = config.maxView = newMaxView;
             let newStartView = startView;
-            if (void 0 !== inOpts.startView) {
+            if ("startView" in inOpts) {
                 newStartView = validateViewId(inOpts.startView, newStartView);
                 delete inOpts.startView;
             }
@@ -5574,7 +5629,7 @@
                 if (nextArrow.childNodes.length > 0) config.nextArrow = nextArrow.childNodes;
                 delete inOpts.nextArrow;
             }
-            if (void 0 !== inOpts.disableTouchKeyboard) {
+            if ("disableTouchKeyboard" in inOpts) {
                 config.disableTouchKeyboard = "ontouchstart" in document && !!inOpts.disableTouchKeyboard;
                 delete inOpts.disableTouchKeyboard;
             }
@@ -5586,45 +5641,105 @@
                 };
                 delete inOpts.orientation;
             }
-            if (void 0 !== inOpts.todayBtnMode) {
-                switch (inOpts.todayBtnMode) {
+            if ("todayButtonMode" in inOpts) {
+                switch (inOpts.todayButtonMode) {
                   case 0:
                   case 1:
-                    config.todayBtnMode = inOpts.todayBtnMode;
+                    config.todayButtonMode = inOpts.todayButtonMode;
                 }
-                delete inOpts.todayBtnMode;
+                delete inOpts.todayButtonMode;
             }
-            Object.keys(inOpts).forEach((key => {
-                if (void 0 !== inOpts[key] && hasProperty(options_defaultOptions, key)) config[key] = inOpts[key];
+            Object.entries(inOpts).forEach((([key, value]) => {
+                if (void 0 !== value && key in defaultOptions) config[key] = value;
             }));
             return config;
         }
-        const pickerTemplate = optimizeTemplateHTML(`<div class="datepicker">\n  <div class="datepicker-picker">\n    <div class="datepicker-header">\n      <div class="datepicker-title"></div>\n      <div class="datepicker-controls">\n        <button type="button" class="%buttonClass% prev-btn"></button>\n        <button type="button" class="%buttonClass% view-switch"></button>\n        <button type="button" class="%buttonClass% next-btn"></button>\n      </div>\n    </div>\n    <div class="datepicker-main"></div>\n    <div class="datepicker-footer">\n      <div class="datepicker-controls">\n        <button type="button" class="%buttonClass% today-btn"></button>\n        <button type="button" class="%buttonClass% clear-btn"></button>\n      </div>\n    </div>\n  </div>\n</div>`);
-        const templates_pickerTemplate = pickerTemplate;
+        const defaultShortcutKeys = {
+            show: {
+                key: "ArrowDown"
+            },
+            hide: null,
+            toggle: {
+                key: "Escape"
+            },
+            prevButton: {
+                key: "ArrowLeft",
+                ctrlOrMetaKey: true
+            },
+            nextButton: {
+                key: "ArrowRight",
+                ctrlOrMetaKey: true
+            },
+            viewSwitch: {
+                key: "ArrowUp",
+                ctrlOrMetaKey: true
+            },
+            clearButton: {
+                key: "Backspace",
+                ctrlOrMetaKey: true
+            },
+            todayButton: {
+                key: ".",
+                ctrlOrMetaKey: true
+            },
+            exitEditMode: {
+                key: "ArrowDown",
+                ctrlOrMetaKey: true
+            }
+        };
+        function createShortcutKeyConfig(options) {
+            return Object.keys(defaultShortcutKeys).reduce(((keyDefs, shortcut) => {
+                const keyDef = void 0 === options[shortcut] ? defaultShortcutKeys[shortcut] : options[shortcut];
+                const key = keyDef && keyDef.key;
+                if (!key || "string" !== typeof key) return keyDefs;
+                const normalizedDef = {
+                    key,
+                    ctrlOrMetaKey: !!(keyDef.ctrlOrMetaKey || keyDef.ctrlKey || keyDef.metaKey)
+                };
+                if (key.length > 1) {
+                    normalizedDef.altKey = !!keyDef.altKey;
+                    normalizedDef.shiftKey = !!keyDef.shiftKey;
+                }
+                keyDefs[shortcut] = normalizedDef;
+                return keyDefs;
+            }), {});
+        }
+        const getButtons = buttonList => buttonList.map((classes => `<button type="button" class="%buttonClass% ${classes}" tabindex="-1"></button>`)).join("");
+        const pickerTemplate = optimizeTemplateHTML(`<div class="datepicker">\n  <div class="datepicker-picker">\n    <div class="datepicker-header">\n      <div class="datepicker-title"></div>\n      <div class="datepicker-controls">\n        ${getButtons([ "prev-button prev-btn", "view-switch", "next-button next-btn" ])}\n      </div>\n    </div>\n    <div class="datepicker-main"></div>\n    <div class="datepicker-footer">\n      <div class="datepicker-controls">\n        ${getButtons([ "today-button today-btn", "clear-button clear-btn" ])}\n      </div>\n    </div>\n  </div>\n</div>`);
         const daysTemplate = optimizeTemplateHTML(`<div class="days">\n  <div class="days-of-week">${createTagRepeat("span", 7, {
             class: "dow"
         })}</div>\n  <div class="datepicker-grid">${createTagRepeat("span", 42)}</div>\n</div>`);
-        const templates_daysTemplate = daysTemplate;
-        const calendarWeeksTemplate = optimizeTemplateHTML(`<div class="calendar-weeks">\n  <div class="days-of-week"><span class="dow"></span></div>\n  <div class="weeks">${createTagRepeat("span", 6, {
+        const weekNumbersTemplate = optimizeTemplateHTML(`<div class="week-numbers calendar-weeks">\n  <div class="days-of-week"><span class="dow"></span></div>\n  <div class="weeks">${createTagRepeat("span", 6, {
             class: "week"
         })}</div>\n</div>`);
-        const templates_calendarWeeksTemplate = calendarWeeksTemplate;
         class View {
             constructor(picker, config) {
                 Object.assign(this, config, {
                     picker,
                     element: parseHTML(`<div class="datepicker-view"></div>`).firstChild,
-                    selected: []
+                    selected: [],
+                    isRangeEnd: !!picker.datepicker.rangeSideIndex
                 });
                 this.init(this.picker.datepicker.config);
             }
             init(options) {
-                if (void 0 !== options.pickLevel) this.isMinView = this.id === options.pickLevel;
+                if ("pickLevel" in options) this.isMinView = this.id === options.pickLevel;
                 this.setOptions(options);
                 this.updateFocus();
                 this.updateSelection();
             }
-            performBeforeHook(el, current, timeValue) {
+            prepareForRender(switchLabel, prevButtonDisabled, nextButtonDisabled) {
+                this.disabled = [];
+                const picker = this.picker;
+                picker.setViewSwitchLabel(switchLabel);
+                picker.setPrevButtonDisabled(prevButtonDisabled);
+                picker.setNextButtonDisabled(nextButtonDisabled);
+            }
+            setDisabled(date, classList) {
+                classList.add("disabled");
+                pushUnique(this.disabled, date);
+            }
+            performBeforeHook(el, timeValue) {
                 let result = this.beforeShow(new Date(timeValue));
                 switch (typeof result) {
                   case "boolean":
@@ -5639,17 +5754,48 @@
                     };
                 }
                 if (result) {
-                    if (false === result.enabled) {
-                        el.classList.add("disabled");
-                        pushUnique(this.disabled, current);
-                    }
+                    const classList = el.classList;
+                    if (false === result.enabled) this.setDisabled(timeValue, classList);
                     if (result.classes) {
                         const extraClasses = result.classes.split(/\s+/);
-                        el.classList.add(...extraClasses);
-                        if (extraClasses.includes("disabled")) pushUnique(this.disabled, current);
+                        classList.add(...extraClasses);
+                        if (extraClasses.includes("disabled")) this.setDisabled(timeValue, classList);
                     }
                     if (result.content) replaceChildNodes(el, result.content);
                 }
+            }
+            renderCell(el, content, cellVal, date, {selected, range}, outOfScope, extraClasses = []) {
+                el.textContent = content;
+                if (this.isMinView) el.dataset.date = date;
+                const classList = el.classList;
+                el.className = `datepicker-cell ${this.cellClass}`;
+                if (cellVal < this.first) classList.add("prev"); else if (cellVal > this.last) classList.add("next");
+                classList.add(...extraClasses);
+                if (outOfScope || this.checkDisabled(date, this.id)) this.setDisabled(date, classList);
+                if (range) {
+                    const [rangeStart, rangeEnd] = range;
+                    if (cellVal > rangeStart && cellVal < rangeEnd) classList.add("range");
+                    if (cellVal === rangeStart) classList.add("range-start");
+                    if (cellVal === rangeEnd) classList.add("range-end");
+                }
+                if (selected.includes(cellVal)) classList.add("selected");
+                if (cellVal === this.focused) classList.add("focused");
+                if (this.beforeShow) this.performBeforeHook(el, date);
+            }
+            refreshCell(el, cellVal, selected, [rangeStart, rangeEnd]) {
+                const classList = el.classList;
+                classList.remove("range", "range-start", "range-end", "selected", "focused");
+                if (cellVal > rangeStart && cellVal < rangeEnd) classList.add("range");
+                if (cellVal === rangeStart) classList.add("range-start");
+                if (cellVal === rangeEnd) classList.add("range-end");
+                if (selected.includes(cellVal)) classList.add("selected");
+                if (cellVal === this.focused) classList.add("focused");
+            }
+            changeFocusedCell(cellIndex) {
+                this.grid.querySelectorAll(".focused").forEach((el => {
+                    el.classList.remove("focused");
+                }));
+                this.grid.children[cellIndex].classList.add("focused");
             }
         }
         class DaysView extends View {
@@ -5662,7 +5808,7 @@
             }
             init(options, onConstruction = true) {
                 if (onConstruction) {
-                    const inner = parseHTML(templates_daysTemplate).firstChild;
+                    const inner = parseHTML(daysTemplate).firstChild;
                     this.dow = inner.firstChild;
                     this.grid = inner.lastChild;
                     this.element.appendChild(inner);
@@ -5671,16 +5817,16 @@
             }
             setOptions(options) {
                 let updateDOW;
-                if (hasProperty(options, "minDate")) this.minDate = options.minDate;
-                if (hasProperty(options, "maxDate")) this.maxDate = options.maxDate;
-                if (options.datesDisabled) this.datesDisabled = options.datesDisabled;
+                if ("minDate" in options) this.minDate = options.minDate;
+                if ("maxDate" in options) this.maxDate = options.maxDate;
+                if (options.checkDisabled) this.checkDisabled = options.checkDisabled;
                 if (options.daysOfWeekDisabled) {
                     this.daysOfWeekDisabled = options.daysOfWeekDisabled;
                     updateDOW = true;
                 }
                 if (options.daysOfWeekHighlighted) this.daysOfWeekHighlighted = options.daysOfWeekHighlighted;
-                if (void 0 !== options.todayHighlight) this.todayHighlight = options.todayHighlight;
-                if (void 0 !== options.weekStart) {
+                if ("todayHighlight" in options) this.todayHighlight = options.todayHighlight;
+                if ("weekStart" in options) {
                     this.weekStart = options.weekStart;
                     this.weekEnd = options.weekEnd;
                     updateDOW = true;
@@ -5691,25 +5837,26 @@
                     this.switchLabelFormat = locale.titleFormat;
                     updateDOW = true;
                 }
-                if (void 0 !== options.beforeShowDay) this.beforeShow = "function" === typeof options.beforeShowDay ? options.beforeShowDay : void 0;
-                if (void 0 !== options.calendarWeeks) if (options.calendarWeeks && !this.calendarWeeks) {
-                    const weeksElem = parseHTML(templates_calendarWeeksTemplate).firstChild;
-                    this.calendarWeeks = {
+                if ("beforeShowDay" in options) this.beforeShow = "function" === typeof options.beforeShowDay ? options.beforeShowDay : void 0;
+                if ("weekNumbers" in options) if (options.weekNumbers && !this.weekNumbers) {
+                    const weeksElem = parseHTML(weekNumbersTemplate).firstChild;
+                    this.weekNumbers = {
                         element: weeksElem,
                         dow: weeksElem.firstChild,
                         weeks: weeksElem.lastChild
                     };
                     this.element.insertBefore(weeksElem, this.element.firstChild);
-                } else if (this.calendarWeeks && !options.calendarWeeks) {
-                    this.element.removeChild(this.calendarWeeks.element);
-                    this.calendarWeeks = null;
+                } else if (this.weekNumbers && !options.weekNumbers) {
+                    this.element.removeChild(this.weekNumbers.element);
+                    this.weekNumbers = null;
                 }
-                if (void 0 !== options.showDaysOfWeek) if (options.showDaysOfWeek) {
+                if ("getWeekNumber" in options) this.getWeekNumber = options.getWeekNumber;
+                if ("showDaysOfWeek" in options) if (options.showDaysOfWeek) {
                     showElement(this.dow);
-                    if (this.calendarWeeks) showElement(this.calendarWeeks.dow);
+                    if (this.weekNumbers) showElement(this.weekNumbers.dow);
                 } else {
                     hideElement(this.dow);
-                    if (this.calendarWeeks) hideElement(this.calendarWeeks.dow);
+                    if (this.weekNumbers) hideElement(this.weekNumbers.dow);
                 }
                 if (updateDOW) Array.from(this.dow.children).forEach(((el, index) => {
                     const dow = (this.weekStart + index) % 7;
@@ -5735,65 +5882,34 @@
             }
             render() {
                 this.today = this.todayHighlight ? today() : void 0;
-                this.disabled = [ ...this.datesDisabled ];
-                const switchLabel = formatDate(this.focused, this.switchLabelFormat, this.locale);
-                this.picker.setViewSwitchLabel(switchLabel);
-                this.picker.setPrevBtnDisabled(this.first <= this.minDate);
-                this.picker.setNextBtnDisabled(this.last >= this.maxDate);
-                if (this.calendarWeeks) {
-                    const startOfWeek = dayOfTheWeekOf(this.first, 1, 1);
-                    Array.from(this.calendarWeeks.weeks.children).forEach(((el, index) => {
-                        el.textContent = getWeek(addWeeks(startOfWeek, index));
+                this.prepareForRender(formatDate(this.focused, this.switchLabelFormat, this.locale), this.first <= this.minDate, this.last >= this.maxDate);
+                if (this.weekNumbers) {
+                    const weekStart = this.weekStart;
+                    const startOfWeek = dayOfTheWeekOf(this.first, weekStart, weekStart);
+                    Array.from(this.weekNumbers.weeks.children).forEach(((el, index) => {
+                        const dateOfWeekStart = addWeeks(startOfWeek, index);
+                        el.textContent = this.getWeekNumber(dateOfWeekStart, weekStart);
+                        if (index > 3) el.classList[dateOfWeekStart > this.last ? "add" : "remove"]("next");
                     }));
                 }
                 Array.from(this.grid.children).forEach(((el, index) => {
-                    const classList = el.classList;
                     const current = addDays(this.start, index);
-                    const date = new Date(current);
-                    const day = date.getDay();
-                    el.className = `datepicker-cell ${this.cellClass}`;
-                    el.dataset.date = current;
-                    el.textContent = date.getDate();
-                    if (current < this.first) classList.add("prev"); else if (current > this.last) classList.add("next");
-                    if (this.today === current) classList.add("today");
-                    if (current < this.minDate || current > this.maxDate || this.disabled.includes(current)) classList.add("disabled");
-                    if (this.daysOfWeekDisabled.includes(day)) {
-                        classList.add("disabled");
-                        pushUnique(this.disabled, current);
-                    }
-                    if (this.daysOfWeekHighlighted.includes(day)) classList.add("highlighted");
-                    if (this.range) {
-                        const [rangeStart, rangeEnd] = this.range;
-                        if (current > rangeStart && current < rangeEnd) classList.add("range");
-                        if (current === rangeStart) classList.add("range-start");
-                        if (current === rangeEnd) classList.add("range-end");
-                    }
-                    if (this.selected.includes(current)) classList.add("selected");
-                    if (current === this.focused) classList.add("focused");
-                    if (this.beforeShow) this.performBeforeHook(el, current, current);
+                    const dateObj = new Date(current);
+                    const day = dateObj.getDay();
+                    const extraClasses = [];
+                    if (this.today === current) extraClasses.push("today");
+                    if (this.daysOfWeekHighlighted.includes(day)) extraClasses.push("highlighted");
+                    this.renderCell(el, dateObj.getDate(), current, current, this, current < this.minDate || current > this.maxDate || this.daysOfWeekDisabled.includes(day), extraClasses);
                 }));
             }
             refresh() {
-                const [rangeStart, rangeEnd] = this.range || [];
-                this.grid.querySelectorAll(".range, .range-start, .range-end, .selected, .focused").forEach((el => {
-                    el.classList.remove("range", "range-start", "range-end", "selected", "focused");
-                }));
+                const range = this.range || [];
                 Array.from(this.grid.children).forEach((el => {
-                    const current = Number(el.dataset.date);
-                    const classList = el.classList;
-                    if (current > rangeStart && current < rangeEnd) classList.add("range");
-                    if (current === rangeStart) classList.add("range-start");
-                    if (current === rangeEnd) classList.add("range-end");
-                    if (this.selected.includes(current)) classList.add("selected");
-                    if (current === this.focused) classList.add("focused");
+                    this.refreshCell(el, Number(el.dataset.date), this.selected, range);
                 }));
             }
             refreshFocus() {
-                const index = Math.round((this.focused - this.start) / 864e5);
-                this.grid.querySelectorAll(".focused").forEach((el => {
-                    el.classList.remove("focused");
-                }));
-                this.grid.children[index].classList.add("focused");
+                this.changeFocusedCell(Math.round((this.focused - this.start) / 864e5));
             }
         }
         function computeMonthRange(range, thisYear) {
@@ -5817,27 +5933,27 @@
                     this.grid.appendChild(parseHTML(createTagRepeat("span", 12, {
                         "data-month": ix => ix
                     })));
+                    this.first = 0;
+                    this.last = 11;
                 }
                 super.init(options);
             }
             setOptions(options) {
                 if (options.locale) this.monthNames = options.locale.monthsShort;
-                if (hasProperty(options, "minDate")) if (void 0 === options.minDate) this.minYear = this.minMonth = this.minDate = void 0; else {
+                if ("minDate" in options) if (void 0 === options.minDate) this.minYear = this.minMonth = this.minDate = void 0; else {
                     const minDateObj = new Date(options.minDate);
                     this.minYear = minDateObj.getFullYear();
                     this.minMonth = minDateObj.getMonth();
                     this.minDate = minDateObj.setDate(1);
                 }
-                if (hasProperty(options, "maxDate")) if (void 0 === options.maxDate) this.maxYear = this.maxMonth = this.maxDate = void 0; else {
+                if ("maxDate" in options) if (void 0 === options.maxDate) this.maxYear = this.maxMonth = this.maxDate = void 0; else {
                     const maxDateObj = new Date(options.maxDate);
                     this.maxYear = maxDateObj.getFullYear();
                     this.maxMonth = maxDateObj.getMonth();
                     this.maxDate = dateValue(this.maxYear, this.maxMonth + 1, 0);
                 }
-                if (this.isMinView) {
-                    if (options.datesDisabled) this.datesDisabled = options.datesDisabled;
-                } else this.datesDisabled = [];
-                if (void 0 !== options.beforeShowMonth) this.beforeShow = "function" === typeof options.beforeShowMonth ? options.beforeShowMonth : void 0;
+                if (options.checkDisabled) this.checkDisabled = this.isMinView || null === options.datesDisabled ? options.checkDisabled : () => false;
+                if ("beforeShowMonth" in options) this.beforeShow = "function" === typeof options.beforeShowMonth ? options.beforeShowMonth : void 0;
             }
             updateFocus() {
                 const viewDate = new Date(this.picker.viewDate);
@@ -5859,57 +5975,29 @@
                 }));
             }
             render() {
-                this.disabled = this.datesDisabled.reduce(((arr, disabled) => {
-                    const dt = new Date(disabled);
-                    if (this.year === dt.getFullYear()) arr.push(dt.getMonth());
-                    return arr;
-                }), []);
-                this.picker.setViewSwitchLabel(this.year);
-                this.picker.setPrevBtnDisabled(this.year <= this.minYear);
-                this.picker.setNextBtnDisabled(this.year >= this.maxYear);
+                this.prepareForRender(this.year, this.year <= this.minYear, this.year >= this.maxYear);
                 const selected = this.selected[this.year] || [];
                 const yrOutOfRange = this.year < this.minYear || this.year > this.maxYear;
                 const isMinYear = this.year === this.minYear;
                 const isMaxYear = this.year === this.maxYear;
                 const range = computeMonthRange(this.range, this.year);
                 Array.from(this.grid.children).forEach(((el, index) => {
-                    const classList = el.classList;
-                    const date = dateValue(this.year, index, 1);
-                    el.className = `datepicker-cell ${this.cellClass}`;
-                    if (this.isMinView) el.dataset.date = date;
-                    el.textContent = this.monthNames[index];
-                    if (yrOutOfRange || isMinYear && index < this.minMonth || isMaxYear && index > this.maxMonth || this.disabled.includes(index)) classList.add("disabled");
-                    if (range) {
-                        const [rangeStart, rangeEnd] = range;
-                        if (index > rangeStart && index < rangeEnd) classList.add("range");
-                        if (index === rangeStart) classList.add("range-start");
-                        if (index === rangeEnd) classList.add("range-end");
-                    }
-                    if (selected.includes(index)) classList.add("selected");
-                    if (index === this.focused) classList.add("focused");
-                    if (this.beforeShow) this.performBeforeHook(el, index, date);
+                    const date = regularizeDate(new Date(this.year, index, 1), 1, this.isRangeEnd);
+                    this.renderCell(el, this.monthNames[index], index, date, {
+                        selected,
+                        range
+                    }, yrOutOfRange || isMinYear && index < this.minMonth || isMaxYear && index > this.maxMonth);
                 }));
             }
             refresh() {
                 const selected = this.selected[this.year] || [];
-                const [rangeStart, rangeEnd] = computeMonthRange(this.range, this.year) || [];
-                this.grid.querySelectorAll(".range, .range-start, .range-end, .selected, .focused").forEach((el => {
-                    el.classList.remove("range", "range-start", "range-end", "selected", "focused");
-                }));
+                const range = computeMonthRange(this.range, this.year) || [];
                 Array.from(this.grid.children).forEach(((el, index) => {
-                    const classList = el.classList;
-                    if (index > rangeStart && index < rangeEnd) classList.add("range");
-                    if (index === rangeStart) classList.add("range-start");
-                    if (index === rangeEnd) classList.add("range-end");
-                    if (selected.includes(index)) classList.add("selected");
-                    if (index === this.focused) classList.add("focused");
+                    this.refreshCell(el, index, selected, range);
                 }));
             }
             refreshFocus() {
-                this.grid.querySelectorAll(".focused").forEach((el => {
-                    el.classList.remove("focused");
-                }));
-                this.grid.children[this.focused].classList.add("focused");
+                this.changeFocusedCell(this.focused);
             }
         }
         function toTitleCase(word) {
@@ -5930,18 +6018,16 @@
                 super.init(options);
             }
             setOptions(options) {
-                if (hasProperty(options, "minDate")) if (void 0 === options.minDate) this.minYear = this.minDate = void 0; else {
+                if ("minDate" in options) if (void 0 === options.minDate) this.minYear = this.minDate = void 0; else {
                     this.minYear = startOfYearPeriod(options.minDate, this.step);
                     this.minDate = dateValue(this.minYear, 0, 1);
                 }
-                if (hasProperty(options, "maxDate")) if (void 0 === options.maxDate) this.maxYear = this.maxDate = void 0; else {
+                if ("maxDate" in options) if (void 0 === options.maxDate) this.maxYear = this.maxDate = void 0; else {
                     this.maxYear = startOfYearPeriod(options.maxDate, this.step);
                     this.maxDate = dateValue(this.maxYear, 11, 31);
                 }
-                if (this.isMinView) {
-                    if (options.datesDisabled) this.datesDisabled = options.datesDisabled;
-                } else this.datesDisabled = [];
-                if (void 0 !== options[this.beforeShowOption]) {
+                if (options.checkDisabled) this.checkDisabled = this.isMinView || null === options.datesDisabled ? options.checkDisabled : () => false;
+                if (this.beforeShowOption in options) {
                     const beforeShow = options[this.beforeShowOption];
                     this.beforeShow = "function" === typeof beforeShow ? beforeShow : void 0;
                 }
@@ -5963,67 +6049,40 @@
                 }));
             }
             render() {
-                this.disabled = this.datesDisabled.map((disabled => new Date(disabled).getFullYear()));
-                this.picker.setViewSwitchLabel(`${this.first}-${this.last}`);
-                this.picker.setPrevBtnDisabled(this.first <= this.minYear);
-                this.picker.setNextBtnDisabled(this.last >= this.maxYear);
+                this.prepareForRender(`${this.first}-${this.last}`, this.first <= this.minYear, this.last >= this.maxYear);
                 Array.from(this.grid.children).forEach(((el, index) => {
-                    const classList = el.classList;
                     const current = this.start + index * this.step;
-                    const date = dateValue(current, 0, 1);
-                    el.className = `datepicker-cell ${this.cellClass}`;
-                    if (this.isMinView) el.dataset.date = date;
-                    el.textContent = el.dataset.year = current;
-                    if (0 === index) classList.add("prev"); else if (11 === index) classList.add("next");
-                    if (current < this.minYear || current > this.maxYear || this.disabled.includes(current)) classList.add("disabled");
-                    if (this.range) {
-                        const [rangeStart, rangeEnd] = this.range;
-                        if (current > rangeStart && current < rangeEnd) classList.add("range");
-                        if (current === rangeStart) classList.add("range-start");
-                        if (current === rangeEnd) classList.add("range-end");
-                    }
-                    if (this.selected.includes(current)) classList.add("selected");
-                    if (current === this.focused) classList.add("focused");
-                    if (this.beforeShow) this.performBeforeHook(el, current, date);
+                    const date = regularizeDate(new Date(current, 0, 1), 2, this.isRangeEnd);
+                    el.dataset.year = current;
+                    this.renderCell(el, current, current, date, this, current < this.minYear || current > this.maxYear);
                 }));
             }
             refresh() {
-                const [rangeStart, rangeEnd] = this.range || [];
-                this.grid.querySelectorAll(".range, .range-start, .range-end, .selected, .focused").forEach((el => {
-                    el.classList.remove("range", "range-start", "range-end", "selected", "focused");
-                }));
+                const range = this.range || [];
                 Array.from(this.grid.children).forEach((el => {
-                    const current = Number(el.textContent);
-                    const classList = el.classList;
-                    if (current > rangeStart && current < rangeEnd) classList.add("range");
-                    if (current === rangeStart) classList.add("range-start");
-                    if (current === rangeEnd) classList.add("range-end");
-                    if (this.selected.includes(current)) classList.add("selected");
-                    if (current === this.focused) classList.add("focused");
+                    this.refreshCell(el, Number(el.textContent), this.selected, range);
                 }));
             }
             refreshFocus() {
-                const index = Math.round((this.focused - this.start) / this.step);
-                this.grid.querySelectorAll(".focused").forEach((el => {
-                    el.classList.remove("focused");
-                }));
-                this.grid.children[index].classList.add("focused");
+                this.changeFocusedCell(Math.round((this.focused - this.start) / this.step));
             }
         }
         function triggerDatepickerEvent(datepicker, type) {
-            const detail = {
-                date: datepicker.getDate(),
-                viewDate: new Date(datepicker.picker.viewDate),
-                viewId: datepicker.picker.currentView.id,
-                datepicker
+            const options = {
+                bubbles: true,
+                cancelable: true,
+                detail: {
+                    date: datepicker.getDate(),
+                    viewDate: new Date(datepicker.picker.viewDate),
+                    viewId: datepicker.picker.currentView.id,
+                    datepicker
+                }
             };
-            datepicker.element.dispatchEvent(new CustomEvent(type, {
-                detail
-            }));
+            datepicker.element.dispatchEvent(new CustomEvent(type, options));
         }
         function goToPrevOrNext(datepicker, direction) {
-            const {minDate, maxDate} = datepicker.config;
-            const {currentView, viewDate} = datepicker.picker;
+            const {config, picker} = datepicker;
+            const {currentView, viewDate} = picker;
             let newViewDate;
             switch (currentView.id) {
               case 0:
@@ -6037,19 +6096,37 @@
               default:
                 newViewDate = addYears(viewDate, direction * currentView.navStep);
             }
-            newViewDate = limitToRange(newViewDate, minDate, maxDate);
-            datepicker.picker.changeFocus(newViewDate).render();
+            newViewDate = limitToRange(newViewDate, config.minDate, config.maxDate);
+            picker.changeFocus(newViewDate).render();
         }
         function switchView(datepicker) {
             const viewId = datepicker.picker.currentView.id;
             if (viewId === datepicker.config.maxView) return;
             datepicker.picker.changeView(viewId + 1).render();
         }
+        function clearSelection(datepicker) {
+            datepicker.setDate({
+                clear: true
+            });
+        }
+        function goToOrSelectToday(datepicker) {
+            const currentDate = today();
+            if (1 === datepicker.config.todayButtonMode) datepicker.setDate(currentDate, {
+                forceRefresh: true,
+                viewDate: currentDate
+            }); else datepicker.setFocusedDate(currentDate, true);
+        }
         function unfocus(datepicker) {
-            if (datepicker.config.updateOnBlur) datepicker.update({
-                revert: true
-            }); else datepicker.refresh("input");
-            datepicker.hide();
+            const onBlur = () => {
+                if (datepicker.config.updateOnBlur) datepicker.update({
+                    revert: true
+                }); else datepicker.refresh("input");
+                datepicker.hide();
+            };
+            const element = datepicker.element;
+            if (isActiveElement(element)) element.addEventListener("blur", onBlur, {
+                once: true
+            }); else onBlur();
         }
         function goToSelectedMonthOrYear(datepicker, selection) {
             const picker = datepicker.picker;
@@ -6058,41 +6135,21 @@
             const newDate = 1 === viewId ? addMonths(viewDate, selection - viewDate.getMonth()) : addYears(viewDate, selection - viewDate.getFullYear());
             picker.changeFocus(newDate).changeView(viewId - 1).render();
         }
-        function onClickTodayBtn(datepicker) {
-            const picker = datepicker.picker;
-            const currentDate = today();
-            if (1 === datepicker.config.todayBtnMode) {
-                if (datepicker.config.autohide) {
-                    datepicker.setDate(currentDate);
-                    return;
-                }
-                datepicker.setDate(currentDate, {
-                    render: false
-                });
-                picker.update();
-            }
-            if (picker.viewDate !== currentDate) picker.changeFocus(currentDate);
-            picker.changeView(0).render();
-        }
-        function onClickClearBtn(datepicker) {
-            datepicker.setDate({
-                clear: true
-            });
-        }
         function onClickViewSwitch(datepicker) {
             switchView(datepicker);
         }
-        function onClickPrevBtn(datepicker) {
+        function onClickPrevButton(datepicker) {
             goToPrevOrNext(datepicker, -1);
         }
-        function onClickNextBtn(datepicker) {
+        function onClickNextButton(datepicker) {
             goToPrevOrNext(datepicker, 1);
         }
         function onClickView(datepicker, ev) {
             const target = findElementInEventPath(ev, ".datepicker-cell");
             if (!target || target.classList.contains("disabled")) return;
             const {id, isMinView} = datepicker.picker.currentView;
-            if (isMinView) datepicker.setDate(Number(target.dataset.date)); else if (1 === id) goToSelectedMonthOrYear(datepicker, Number(target.dataset.month)); else goToSelectedMonthOrYear(datepicker, Number(target.dataset.year));
+            const data = target.dataset;
+            if (isMinView) datepicker.setDate(Number(data.date)); else if (1 === id) goToSelectedMonthOrYear(datepicker, Number(data.month)); else goToSelectedMonthOrYear(datepicker, Number(data.year));
         }
         function onMousedownPicker(ev) {
             ev.preventDefault();
@@ -6103,7 +6160,7 @@
         }), {});
         const toPx = num => num ? `${num}px` : num;
         function processPickerOptions(picker, options) {
-            if (void 0 !== options.title) if (options.title) {
+            if ("title" in options) if (options.title) {
                 picker.controls.title.textContent = options.title;
                 showElement(picker.controls.title);
             } else {
@@ -6111,43 +6168,40 @@
                 hideElement(picker.controls.title);
             }
             if (options.prevArrow) {
-                const prevBtn = picker.controls.prevBtn;
-                emptyChildNodes(prevBtn);
+                const prevButton = picker.controls.prevButton;
+                emptyChildNodes(prevButton);
                 options.prevArrow.forEach((node => {
-                    prevBtn.appendChild(node.cloneNode(true));
+                    prevButton.appendChild(node.cloneNode(true));
                 }));
             }
             if (options.nextArrow) {
-                const nextBtn = picker.controls.nextBtn;
-                emptyChildNodes(nextBtn);
+                const nextButton = picker.controls.nextButton;
+                emptyChildNodes(nextButton);
                 options.nextArrow.forEach((node => {
-                    nextBtn.appendChild(node.cloneNode(true));
+                    nextButton.appendChild(node.cloneNode(true));
                 }));
             }
             if (options.locale) {
-                picker.controls.todayBtn.textContent = options.locale.today;
-                picker.controls.clearBtn.textContent = options.locale.clear;
+                picker.controls.todayButton.textContent = options.locale.today;
+                picker.controls.clearButton.textContent = options.locale.clear;
             }
-            if (void 0 !== options.todayBtn) if (options.todayBtn) showElement(picker.controls.todayBtn); else hideElement(picker.controls.todayBtn);
-            if (hasProperty(options, "minDate") || hasProperty(options, "maxDate")) {
+            if ("todayButton" in options) if (options.todayButton) showElement(picker.controls.todayButton); else hideElement(picker.controls.todayButton);
+            if ("minDate" in options || "maxDate" in options) {
                 const {minDate, maxDate} = picker.datepicker.config;
-                picker.controls.todayBtn.disabled = !isInRange(today(), minDate, maxDate);
+                picker.controls.todayButton.disabled = !isInRange(today(), minDate, maxDate);
             }
-            if (void 0 !== options.clearBtn) if (options.clearBtn) showElement(picker.controls.clearBtn); else hideElement(picker.controls.clearBtn);
+            if ("clearButton" in options) if (options.clearButton) showElement(picker.controls.clearButton); else hideElement(picker.controls.clearButton);
         }
         function computeResetViewDate(datepicker) {
-            const {dates, config} = datepicker;
-            const viewDate = dates.length > 0 ? lastItemOf(dates) : config.defaultViewDate;
+            const {dates, config, rangeSideIndex} = datepicker;
+            const viewDate = dates.length > 0 ? lastItemOf(dates) : regularizeDate(config.defaultViewDate, config.pickLevel, rangeSideIndex);
             return limitToRange(viewDate, config.minDate, config.maxDate);
         }
         function setViewDate(picker, newDate) {
-            const oldViewDate = new Date(picker.viewDate);
-            const newViewDate = new Date(newDate);
-            const {id, year, first, last} = picker.currentView;
-            const viewYear = newViewDate.getFullYear();
+            if (!("_oldViewDate" in picker) && newDate !== picker.viewDate) picker._oldViewDate = picker.viewDate;
             picker.viewDate = newDate;
-            if (viewYear !== oldViewDate.getFullYear()) triggerDatepickerEvent(picker.datepicker, "changeYear");
-            if (newViewDate.getMonth() !== oldViewDate.getMonth()) triggerDatepickerEvent(picker.datepicker, "changeMonth");
+            const {id, year, first, last} = picker.currentView;
+            const viewYear = new Date(newDate).getFullYear();
             switch (id) {
               case 0:
                 return newDate < first || newDate > last;
@@ -6169,28 +6223,28 @@
         }
         class Picker {
             constructor(datepicker) {
-                const {config} = this.datepicker = datepicker;
-                const template = templates_pickerTemplate.replace(/%buttonClass%/g, config.buttonClass);
+                const {config, inputField} = this.datepicker = datepicker;
+                const template = pickerTemplate.replace(/%buttonClass%/g, config.buttonClass);
                 const element = this.element = parseHTML(template).firstChild;
                 const [header, main, footer] = element.firstChild.children;
                 const title = header.firstElementChild;
-                const [prevBtn, viewSwitch, nextBtn] = header.lastElementChild.children;
-                const [todayBtn, clearBtn] = footer.firstChild.children;
+                const [prevButton, viewSwitch, nextButton] = header.lastElementChild.children;
+                const [todayButton, clearButton] = footer.firstChild.children;
                 const controls = {
                     title,
-                    prevBtn,
+                    prevButton,
                     viewSwitch,
-                    nextBtn,
-                    todayBtn,
-                    clearBtn
+                    nextButton,
+                    todayButton,
+                    clearButton
                 };
                 this.main = main;
                 this.controls = controls;
-                const elementClass = datepicker.inline ? "inline" : "dropdown";
+                const elementClass = inputField ? "dropdown" : "inline";
                 element.classList.add(`datepicker-${elementClass}`);
                 processPickerOptions(this, config);
                 this.viewDate = computeResetViewDate(datepicker);
-                registerListeners(datepicker, [ [ element, "mousedown", onMousedownPicker ], [ main, "click", onClickView.bind(null, datepicker) ], [ controls.viewSwitch, "click", onClickViewSwitch.bind(null, datepicker) ], [ controls.prevBtn, "click", onClickPrevBtn.bind(null, datepicker) ], [ controls.nextBtn, "click", onClickNextBtn.bind(null, datepicker) ], [ controls.todayBtn, "click", onClickTodayBtn.bind(null, datepicker) ], [ controls.clearBtn, "click", onClickClearBtn.bind(null, datepicker) ] ]);
+                registerListeners(datepicker, [ [ element, "mousedown", onMousedownPicker ], [ main, "click", onClickView.bind(null, datepicker) ], [ controls.viewSwitch, "click", onClickViewSwitch.bind(null, datepicker) ], [ controls.prevButton, "click", onClickPrevButton.bind(null, datepicker) ], [ controls.nextButton, "click", onClickNextButton.bind(null, datepicker) ], [ controls.todayButton, "click", goToOrSelectToday.bind(null, datepicker) ], [ controls.clearButton, "click", clearSelection.bind(null, datepicker) ] ]);
                 this.views = [ new DaysView(this), new MonthsView(this), new YearsView(this, {
                     id: 2,
                     name: "years",
@@ -6205,7 +6259,7 @@
                 this.currentView = this.views[config.startView];
                 this.currentView.render();
                 this.main.appendChild(this.currentView.element);
-                if (config.container) config.container.appendChild(this.element); else datepicker.inputField.after(this.element);
+                if (config.container) config.container.appendChild(this.element); else inputField.after(this.element);
             }
             setOptions(options) {
                 processPickerOptions(this, options);
@@ -6220,15 +6274,14 @@
             show() {
                 if (this.active) return;
                 const {datepicker, element} = this;
-                if (datepicker.inline) element.classList.add("active"); else {
-                    const inputDirection = getTextDirection(datepicker.inputField);
+                const inputField = datepicker.inputField;
+                if (inputField) {
+                    const inputDirection = getTextDirection(inputField);
                     if (inputDirection !== getTextDirection(getParent(element))) element.dir = inputDirection; else if (element.dir) element.removeAttribute("dir");
-                    element.style.visiblity = "hidden";
-                    element.classList.add("active");
                     this.place();
-                    element.style.visiblity = "";
-                    if (datepicker.config.disableTouchKeyboard) datepicker.inputField.blur();
-                }
+                    element.classList.add("active");
+                    if (datepicker.config.disableTouchKeyboard) inputField.blur();
+                } else element.classList.add("active");
                 this.active = true;
                 triggerDatepickerEvent(datepicker, "show");
             }
@@ -6240,9 +6293,12 @@
                 triggerDatepickerEvent(this.datepicker, "hide");
             }
             place() {
-                const {classList, offsetParent, style} = this.element;
-                const {config, inputField} = this.datepicker;
+                const {classList, style} = this.element;
+                style.display = "block";
                 const {width: calendarWidth, height: calendarHeight} = this.element.getBoundingClientRect();
+                const offsetParent = this.element.offsetParent;
+                style.display = "";
+                const {config, inputField} = this.datepicker;
                 const {left: inputLeft, top: inputTop, right: inputRight, bottom: inputBottom, width: inputWidth, height: inputHeight} = inputField.getBoundingClientRect();
                 let {x: orientX, y: orientY} = config.orientation;
                 let left = inputLeft;
@@ -6286,20 +6342,18 @@
             setViewSwitchLabel(labelText) {
                 this.controls.viewSwitch.textContent = labelText;
             }
-            setPrevBtnDisabled(disabled) {
-                this.controls.prevBtn.disabled = disabled;
+            setPrevButtonDisabled(disabled) {
+                this.controls.prevButton.disabled = disabled;
             }
-            setNextBtnDisabled(disabled) {
-                this.controls.nextBtn.disabled = disabled;
+            setNextButtonDisabled(disabled) {
+                this.controls.nextButton.disabled = disabled;
             }
             changeView(viewId) {
-                const oldView = this.currentView;
-                const newView = this.views[viewId];
-                if (newView.id !== oldView.id) {
-                    this.currentView = newView;
+                const currentView = this.currentView;
+                if (viewId !== currentView.id) {
+                    if (!this._oldView) this._oldView = currentView;
+                    this.currentView = this.views[viewId];
                     this._renderMethod = "render";
-                    triggerDatepickerEvent(this.datepicker, "changeView");
-                    this.main.replaceChild(newView.element, oldView.element);
                 }
                 return this;
             }
@@ -6310,8 +6364,8 @@
                 }));
                 return this;
             }
-            update() {
-                const newViewDate = computeResetViewDate(this.datepicker);
+            update(viewDate = void 0) {
+                const newViewDate = void 0 === viewDate ? computeResetViewDate(this.datepicker) : viewDate;
                 this._renderMethod = setViewDate(this, newViewDate) ? "render" : "refresh";
                 this.views.forEach((view => {
                     view.updateFocus();
@@ -6320,9 +6374,22 @@
                 return this;
             }
             render(quickRender = true) {
+                const {currentView, datepicker, _oldView: oldView} = this;
+                const oldViewDate = new Date(this._oldViewDate);
                 const renderMethod = quickRender && this._renderMethod || "render";
+                delete this._oldView;
+                delete this._oldViewDate;
                 delete this._renderMethod;
-                this.currentView[renderMethod]();
+                currentView[renderMethod]();
+                if (oldView) {
+                    this.main.replaceChild(currentView.element, oldView.element);
+                    triggerDatepickerEvent(datepicker, "changeView");
+                }
+                if (!isNaN(oldViewDate)) {
+                    const newViewDate = new Date(this.viewDate);
+                    if (newViewDate.getFullYear() !== oldViewDate.getFullYear()) triggerDatepickerEvent(datepicker, "changeYear");
+                    if (newViewDate.getMonth() !== oldViewDate.getMonth()) triggerDatepickerEvent(datepicker, "changeMonth");
+                }
             }
         }
         function findNextAvailableOne(date, addFn, increase, testFn, min, max) {
@@ -6333,81 +6400,88 @@
             }
             return date;
         }
-        function moveByArrowKey(datepicker, ev, direction, vertical) {
+        function moveByArrowKey(datepicker, direction, vertical) {
             const picker = datepicker.picker;
             const currentView = picker.currentView;
             const step = currentView.step || 1;
             let viewDate = picker.viewDate;
             let addFn;
-            let testFn;
             switch (currentView.id) {
               case 0:
-                if (vertical) viewDate = addDays(viewDate, 7 * direction); else if (ev.ctrlKey || ev.metaKey) viewDate = addYears(viewDate, direction); else viewDate = addDays(viewDate, direction);
+                viewDate = addDays(viewDate, vertical ? 7 * direction : direction);
                 addFn = addDays;
-                testFn = date => currentView.disabled.includes(date);
                 break;
 
               case 1:
                 viewDate = addMonths(viewDate, vertical ? 4 * direction : direction);
                 addFn = addMonths;
-                testFn = date => {
-                    const dt = new Date(date);
-                    const {year, disabled} = currentView;
-                    return dt.getFullYear() === year && disabled.includes(dt.getMonth());
-                };
                 break;
 
               default:
                 viewDate = addYears(viewDate, direction * (vertical ? 4 : 1) * step);
                 addFn = addYears;
-                testFn = date => currentView.disabled.includes(startOfYearPeriod(date, step));
             }
-            viewDate = findNextAvailableOne(viewDate, addFn, direction < 0 ? -step : step, testFn, currentView.minDate, currentView.maxDate);
+            viewDate = findNextAvailableOne(viewDate, addFn, direction < 0 ? -step : step, (date => currentView.disabled.includes(date)), currentView.minDate, currentView.maxDate);
             if (void 0 !== viewDate) picker.changeFocus(viewDate).render();
         }
         function onKeydown(datepicker, ev) {
-            const key = ev.key;
+            const {config, picker, editMode} = datepicker;
+            const active = picker.active;
+            const {key, altKey, shiftKey} = ev;
+            const ctrlOrMetaKey = ev.ctrlKey || ev.metaKey;
+            const cancelEvent = () => {
+                ev.preventDefault();
+                ev.stopPropagation();
+            };
             if ("Tab" === key) {
                 unfocus(datepicker);
                 return;
             }
-            const picker = datepicker.picker;
-            const {id, isMinView} = picker.currentView;
-            if (!picker.active) if ("ArrowDown" === key) picker.show(); else {
-                if ("Enter" === key) datepicker.update(); else if ("Escape" === key) picker.show();
-                return;
-            } else if (datepicker.editMode) {
-                if ("Enter" === key) datepicker.exitEditMode({
+            if ("Enter" === key) {
+                if (!active) datepicker.update(); else if (editMode) datepicker.exitEditMode({
                     update: true,
-                    autohide: datepicker.config.autohide
-                }); else if ("Escape" === key) picker.hide();
-                return;
-            } else if ("ArrowLeft" === key) if (ev.ctrlKey || ev.metaKey) goToPrevOrNext(datepicker, -1); else if (ev.shiftKey) {
-                datepicker.enterEditMode();
-                return;
-            } else moveByArrowKey(datepicker, ev, -1, false); else if ("ArrowRight" === key) if (ev.ctrlKey || ev.metaKey) goToPrevOrNext(datepicker, 1); else if (ev.shiftKey) {
-                datepicker.enterEditMode();
-                return;
-            } else moveByArrowKey(datepicker, ev, 1, false); else if ("ArrowUp" === key) if (ev.ctrlKey || ev.metaKey) switchView(datepicker); else if (ev.shiftKey) {
-                datepicker.enterEditMode();
-                return;
-            } else moveByArrowKey(datepicker, ev, -1, true); else if ("ArrowDown" === key) {
-                if (ev.shiftKey && !ev.ctrlKey && !ev.metaKey) {
-                    datepicker.enterEditMode();
-                    return;
+                    autohide: config.autohide
+                }); else {
+                    const currentView = picker.currentView;
+                    if (currentView.isMinView) datepicker.setDate(picker.viewDate); else {
+                        picker.changeView(currentView.id - 1).render();
+                        cancelEvent();
+                    }
                 }
-                moveByArrowKey(datepicker, ev, 1, true);
-            } else if ("Enter" === key) {
-                if (isMinView) {
-                    datepicker.setDate(picker.viewDate);
-                    return;
-                }
-                picker.changeView(id - 1).render();
-            } else {
-                if ("Escape" === key) picker.hide(); else if ("Backspace" === key || "Delete" === key || 1 === key.length && !ev.ctrlKey && !ev.metaKey) datepicker.enterEditMode();
                 return;
             }
-            ev.preventDefault();
+            const shortcutKeys = config.shortcutKeys;
+            const keyInfo = {
+                key,
+                ctrlOrMetaKey,
+                altKey,
+                shiftKey
+            };
+            const shortcut = Object.keys(shortcutKeys).find((item => {
+                const keyDef = shortcutKeys[item];
+                return !Object.keys(keyDef).find((prop => keyDef[prop] !== keyInfo[prop]));
+            }));
+            if (shortcut) {
+                let action;
+                if ("toggle" === shortcut) action = shortcut; else if (editMode) {
+                    if ("exitEditMode" === shortcut) action = shortcut;
+                } else if (active) {
+                    if ("hide" === shortcut) action = shortcut; else if ("prevButton" === shortcut) action = [ goToPrevOrNext, [ datepicker, -1 ] ]; else if ("nextButton" === shortcut) action = [ goToPrevOrNext, [ datepicker, 1 ] ]; else if ("viewSwitch" === shortcut) action = [ switchView, [ datepicker ] ]; else if (config.clearButton && "clearButton" === shortcut) action = [ clearSelection, [ datepicker ] ]; else if (config.todayButton && "todayButton" === shortcut) action = [ goToOrSelectToday, [ datepicker ] ];
+                } else if ("show" === shortcut) action = shortcut;
+                if (action) {
+                    if (Array.isArray(action)) action[0].apply(null, action[1]); else datepicker[action]();
+                    cancelEvent();
+                    return;
+                }
+            }
+            if (!active || editMode) return;
+            const handleArrowKeyPress = (direction, vertical) => {
+                if (shiftKey || ctrlOrMetaKey || altKey) datepicker.enterEditMode(); else {
+                    moveByArrowKey(datepicker, direction, vertical);
+                    ev.preventDefault();
+                }
+            };
+            if ("ArrowLeft" === key) handleArrowKeyPress(-1, false); else if ("ArrowRight" === key) handleArrowKeyPress(1, false); else if ("ArrowUp" === key) handleArrowKeyPress(-1, true); else if ("ArrowDown" === key) handleArrowKeyPress(1, true); else if ("Backspace" === key || "Delete" === key || key && 1 === key.length && !ctrlOrMetaKey) datepicker.enterEditMode();
         }
         function onFocus(datepicker) {
             if (datepicker.config.showOnFocus && !datepicker._showing) datepicker.show();
@@ -6445,13 +6519,14 @@
             return dates.map((dt => formatDate(dt, config.format, config.locale))).join(config.dateDelimiter);
         }
         function processInputDates(datepicker, inputDates, clear = false) {
-            const {config, dates: origDates, rangeSideIndex} = datepicker;
             if (0 === inputDates.length) return clear ? [] : void 0;
+            const {config, dates: origDates, rangeSideIndex} = datepicker;
+            const {pickLevel, maxNumberOfDates} = config;
             let newDates = inputDates.reduce(((dates, dt) => {
                 let date = parseDate(dt, config.format, config.locale);
                 if (void 0 === date) return dates;
-                date = regularizeDate(date, config.pickLevel, rangeSideIndex);
-                if (isInRange(date, config.minDate, config.maxDate) && !dates.includes(date) && !config.datesDisabled.includes(date) && (config.pickLevel > 0 || !config.daysOfWeekDisabled.includes(new Date(date).getDay()))) dates.push(date);
+                date = regularizeDate(date, pickLevel, rangeSideIndex);
+                if (isInRange(date, config.minDate, config.maxDate) && !dates.includes(date) && !config.checkDisabled(date, pickLevel) && (pickLevel > 0 || !config.daysOfWeekDisabled.includes(new Date(date).getDay()))) dates.push(date);
                 return dates;
             }), []);
             if (0 === newDates.length) return;
@@ -6459,89 +6534,83 @@
                 if (!origDates.includes(date)) dates.push(date);
                 return dates;
             }), origDates.filter((date => !newDates.includes(date))));
-            return config.maxNumberOfDates && newDates.length > config.maxNumberOfDates ? newDates.slice(-1 * config.maxNumberOfDates) : newDates;
+            return maxNumberOfDates && newDates.length > maxNumberOfDates ? newDates.slice(-1 * maxNumberOfDates) : newDates;
         }
-        function refreshUI(datepicker, mode = 3, quickRender = true) {
+        function refreshUI(datepicker, mode = 3, quickRender = true, viewDate = void 0) {
             const {config, picker, inputField} = datepicker;
             if (2 & mode) {
                 const newView = picker.active ? config.pickLevel : config.startView;
-                picker.update().changeView(newView).render(quickRender);
+                picker.update(viewDate).changeView(newView).render(quickRender);
             }
             if (1 & mode && inputField) inputField.value = stringifyDates(datepicker.dates, config);
         }
         function setDate(datepicker, inputDates, options) {
-            let {clear, render, autohide, revert} = options;
+            const config = datepicker.config;
+            let {clear, render, autohide, revert, forceRefresh, viewDate} = options;
             if (void 0 === render) render = true;
-            if (!render) autohide = false; else if (void 0 === autohide) autohide = datepicker.config.autohide;
+            if (!render) autohide = forceRefresh = false; else if (void 0 === autohide) autohide = config.autohide;
+            viewDate = parseDate(viewDate, config.format, config.locale);
             const newDates = processInputDates(datepicker, inputDates, clear);
             if (!newDates && !revert) return;
             if (newDates && newDates.toString() !== datepicker.dates.toString()) {
                 datepicker.dates = newDates;
-                refreshUI(datepicker, render ? 3 : 1);
+                refreshUI(datepicker, render ? 3 : 1, true, viewDate);
                 triggerDatepickerEvent(datepicker, "changeDate");
-            } else refreshUI(datepicker, 1);
+            } else refreshUI(datepicker, forceRefresh ? 3 : 1, true, viewDate);
             if (autohide) datepicker.hide();
+        }
+        function getOutputConverter(datepicker, format) {
+            return format ? date => formatDate(date, format, datepicker.config.locale) : date => new Date(date);
         }
         class Datepicker {
             constructor(element, options = {}, rangepicker = void 0) {
                 element.datepicker = this;
                 this.element = element;
+                this.dates = [];
                 const config = this.config = Object.assign({
                     buttonClass: options.buttonClass && String(options.buttonClass) || "button",
                     container: null,
                     defaultViewDate: today(),
                     maxDate: void 0,
                     minDate: void 0
-                }, processOptions(options_defaultOptions, this));
-                const inline = this.inline = "INPUT" !== element.tagName;
+                }, processOptions(defaultOptions, this));
                 let inputField;
-                if (inline) config.container = element; else {
-                    if (options.container) config.container = options.container instanceof HTMLElement ? options.container : document.querySelector(options.container);
+                if ("INPUT" === element.tagName) {
                     inputField = this.inputField = element;
                     inputField.classList.add("datepicker-input");
-                }
+                    if (options.container) config.container = options.container instanceof HTMLElement ? options.container : document.querySelector(options.container);
+                } else config.container = element;
                 if (rangepicker) {
                     const index = rangepicker.inputs.indexOf(inputField);
                     const datepickers = rangepicker.datepickers;
                     if (index < 0 || index > 1 || !Array.isArray(datepickers)) throw Error("Invalid rangepicker object.");
                     datepickers[index] = this;
-                    Object.defineProperty(this, "rangepicker", {
-                        get() {
-                            return rangepicker;
-                        }
-                    });
-                    Object.defineProperty(this, "rangeSideIndex", {
-                        get() {
-                            return index;
-                        }
-                    });
+                    this.rangepicker = rangepicker;
+                    this.rangeSideIndex = index;
                 }
                 this._options = options;
                 Object.assign(config, processOptions(options, this));
-                let initialDates;
-                if (inline) {
-                    initialDates = stringToArray(element.dataset.date, config.dateDelimiter);
-                    delete element.dataset.date;
-                } else initialDates = stringToArray(inputField.value, config.dateDelimiter);
-                this.dates = [];
+                config.shortcutKeys = createShortcutKeyConfig(options.shortcutKeys || {});
+                const initialDates = stringToArray(element.value || element.dataset.date, config.dateDelimiter);
+                delete element.dataset.date;
                 const inputDateValues = processInputDates(this, initialDates);
                 if (inputDateValues && inputDateValues.length > 0) this.dates = inputDateValues;
                 if (inputField) inputField.value = stringifyDates(this.dates, config);
                 const picker = this.picker = new Picker(this);
-                if (inline) this.show(); else {
-                    const onMousedownDocument = onClickOutside.bind(null, this);
-                    const listeners = [ [ inputField, "keydown", onKeydown.bind(null, this) ], [ inputField, "focus", onFocus.bind(null, this) ], [ inputField, "mousedown", onMousedown.bind(null, this) ], [ inputField, "click", onClickInput.bind(null, this) ], [ inputField, "paste", onPaste.bind(null, this) ], [ document, "mousedown", onMousedownDocument ], [ document, "touchstart", onMousedownDocument ], [ window, "resize", picker.place.bind(picker) ] ];
-                    registerListeners(this, listeners);
+                const keydownListener = [ element, "keydown", onKeydown.bind(null, this) ];
+                if (inputField) registerListeners(this, [ keydownListener, [ inputField, "focus", onFocus.bind(null, this) ], [ inputField, "mousedown", onMousedown.bind(null, this) ], [ inputField, "click", onClickInput.bind(null, this) ], [ inputField, "paste", onPaste.bind(null, this) ], [ document, "mousedown", onClickOutside.bind(null, this) ], [ window, "resize", picker.place.bind(picker) ] ]); else {
+                    registerListeners(this, [ keydownListener ]);
+                    this.show();
                 }
             }
             static formatDate(date, format, lang) {
-                return formatDate(date, format, lang && locales[lang] || locales.en);
+                return formatDate(date, format, lang && base_locales[lang] || base_locales.en);
             }
             static parseDate(dateStr, format, lang) {
-                return parseDate(dateStr, format, lang && locales[lang] || locales.en);
+                return parseDate(dateStr, format, lang && base_locales[lang] || base_locales.en);
             }
             static get locales() {
-                return locales;
+                return base_locales;
             }
             get active() {
                 return !!(this.picker && this.picker.active);
@@ -6550,39 +6619,43 @@
                 return this.picker ? this.picker.element : void 0;
             }
             setOptions(options) {
-                const picker = this.picker;
                 const newOptions = processOptions(options, this);
                 Object.assign(this._options, options);
                 Object.assign(this.config, newOptions);
-                picker.setOptions(newOptions);
+                this.picker.setOptions(newOptions);
                 refreshUI(this, 3);
             }
             show() {
                 if (this.inputField) {
-                    if (this.inputField.disabled) return;
-                    if (!isActiveElement(this.inputField) && !this.config.disableTouchKeyboard) {
+                    const {config, inputField} = this;
+                    if (inputField.disabled || inputField.readOnly && !config.enableOnReadonly) return;
+                    if (!isActiveElement(inputField) && !config.disableTouchKeyboard) {
                         this._showing = true;
-                        this.inputField.focus();
+                        inputField.focus();
                         delete this._showing;
                     }
                 }
                 this.picker.show();
             }
             hide() {
-                if (this.inline) return;
+                if (!this.inputField) return;
                 this.picker.hide();
                 this.picker.update().changeView(this.config.startView).render();
+            }
+            toggle() {
+                if (!this.picker.active) this.show(); else if (this.inputField) this.picker.hide();
             }
             destroy() {
                 this.hide();
                 unregisterListeners(this);
                 this.picker.detach();
-                if (!this.inline) this.inputField.classList.remove("datepicker-input");
-                delete this.element.datepicker;
+                const element = this.element;
+                element.classList.remove("datepicker-input");
+                delete element.datepicker;
                 return this;
             }
             getDate(format = void 0) {
-                const callback = format ? date => formatDate(date, format, this.config.locale) : date => new Date(date);
+                const callback = getOutputConverter(this, format);
                 if (this.config.multidate) return this.dates.map(callback);
                 if (this.dates.length > 0) return callback(this.dates[0]);
             }
@@ -6590,18 +6663,31 @@
                 const dates = [ ...args ];
                 const opts = {};
                 const lastArg = lastItemOf(args);
-                if ("object" === typeof lastArg && !Array.isArray(lastArg) && !(lastArg instanceof Date) && lastArg) Object.assign(opts, dates.pop());
+                if (lastArg && "object" === typeof lastArg && !Array.isArray(lastArg) && !(lastArg instanceof Date)) Object.assign(opts, dates.pop());
                 const inputDates = Array.isArray(dates[0]) ? dates[0] : dates;
                 setDate(this, inputDates, opts);
             }
             update(options = void 0) {
-                if (this.inline) return;
+                if (!this.inputField) return;
                 const opts = Object.assign(options || {}, {
                     clear: true,
-                    render: true
+                    render: true,
+                    viewDate: void 0
                 });
                 const inputDates = stringToArray(this.inputField.value, this.config.dateDelimiter);
                 setDate(this, inputDates, opts);
+            }
+            getFocusedDate(format = void 0) {
+                return getOutputConverter(this, format)(this.picker.viewDate);
+            }
+            setFocusedDate(viewDate, resetView = false) {
+                const {config, picker, active, rangeSideIndex} = this;
+                const pickLevel = config.pickLevel;
+                const newViewDate = parseDate(viewDate, config.format, config.locale);
+                if (void 0 === newViewDate) return;
+                picker.changeFocus(regularizeDate(newViewDate, pickLevel, rangeSideIndex));
+                if (active && resetView) picker.changeView(pickLevel);
+                picker.render();
             }
             refresh(target = void 0, forceRender = false) {
                 if (target && "string" !== typeof target) {
@@ -6613,12 +6699,13 @@
                 refreshUI(this, mode, !forceRender);
             }
             enterEditMode() {
-                if (this.inline || !this.picker.active || this.editMode) return;
+                const inputField = this.inputField;
+                if (!inputField || inputField.readOnly || !this.picker.active || this.editMode) return;
                 this.editMode = true;
-                this.inputField.classList.add("in-edit");
+                inputField.classList.add("in-edit");
             }
             exitEditMode(options = void 0) {
-                if (this.inline || !this.editMode) return;
+                if (!this.inputField || !this.editMode) return;
                 const opts = Object.assign({
                     update: false
                 }, options);
@@ -6644,6 +6731,7 @@
             const target = ev.target;
             if (void 0 === target.datepicker) return;
             const datepickers = rangepicker.datepickers;
+            const [datepicker0, datepicker1] = datepickers;
             const setDateOptions = {
                 render: false
             };
@@ -6653,57 +6741,59 @@
             const otherDate = datepickers[otherSide].dates[0];
             if (void 0 !== changedDate && void 0 !== otherDate) {
                 if (0 === changedSide && changedDate > otherDate) {
-                    datepickers[0].setDate(otherDate, setDateOptions);
-                    datepickers[1].setDate(changedDate, setDateOptions);
+                    datepicker0.setDate(otherDate, setDateOptions);
+                    datepicker1.setDate(changedDate, setDateOptions);
                 } else if (1 === changedSide && changedDate < otherDate) {
-                    datepickers[0].setDate(changedDate, setDateOptions);
-                    datepickers[1].setDate(otherDate, setDateOptions);
+                    datepicker0.setDate(changedDate, setDateOptions);
+                    datepicker1.setDate(otherDate, setDateOptions);
                 }
             } else if (!rangepicker.allowOneSidedRange) if (void 0 !== changedDate || void 0 !== otherDate) {
                 setDateOptions.clear = true;
                 datepickers[otherSide].setDate(datepickers[changedSide].dates, setDateOptions);
             }
-            datepickers[0].picker.update().render();
-            datepickers[1].picker.update().render();
+            datepickers.forEach((datepicker => {
+                datepicker.picker.update().render();
+            }));
             delete rangepicker._updating;
         }
         class DateRangePicker {
             constructor(element, options = {}) {
-                const inputs = Array.isArray(options.inputs) ? options.inputs : Array.from(element.querySelectorAll("input"));
+                let inputs = Array.isArray(options.inputs) ? options.inputs : Array.from(element.querySelectorAll("input"));
                 if (inputs.length < 2) return;
                 element.rangepicker = this;
                 this.element = element;
-                this.inputs = inputs.slice(0, 2);
+                this.inputs = inputs = inputs.slice(0, 2);
+                Object.freeze(inputs);
                 this.allowOneSidedRange = !!options.allowOneSidedRange;
                 const changeDateListener = onChangeDate.bind(null, this);
                 const cleanOptions = filterOptions(options);
-                const datepickers = [];
-                Object.defineProperty(this, "datepickers", {
+                const datepickers = this.datepickers = [];
+                inputs.forEach((input => {
+                    setupDatepicker(this, changeDateListener, input, cleanOptions);
+                }));
+                Object.freeze(datepickers);
+                Object.defineProperty(this, "dates", {
                     get() {
-                        return datepickers;
+                        return datepickers.map((datepicker => datepicker.dates[0]));
                     }
                 });
-                setupDatepicker(this, changeDateListener, this.inputs[0], cleanOptions);
-                setupDatepicker(this, changeDateListener, this.inputs[1], cleanOptions);
-                Object.freeze(datepickers);
                 if (datepickers[0].dates.length > 0) onChangeDate(this, {
-                    target: this.inputs[0]
+                    target: inputs[0]
                 }); else if (datepickers[1].dates.length > 0) onChangeDate(this, {
-                    target: this.inputs[1]
+                    target: inputs[1]
                 });
-            }
-            get dates() {
-                return 2 === this.datepickers.length ? [ this.datepickers[0].dates[0], this.datepickers[1].dates[0] ] : void 0;
             }
             setOptions(options) {
                 this.allowOneSidedRange = !!options.allowOneSidedRange;
                 const cleanOptions = filterOptions(options);
-                this.datepickers[0].setOptions(cleanOptions);
-                this.datepickers[1].setOptions(cleanOptions);
+                this.datepickers.forEach((datepicker => {
+                    datepicker.setOptions(cleanOptions);
+                }));
             }
             destroy() {
-                this.datepickers[0].destroy();
-                this.datepickers[1].destroy();
+                this.datepickers.forEach((datepicker => {
+                    datepicker.destroy();
+                }));
                 unregisterListeners(this);
                 delete this.element.rangepicker;
             }
@@ -6712,16 +6802,15 @@
                 return this.dates.map((date => void 0 === date ? date : callback(date)));
             }
             setDates(rangeStart, rangeEnd) {
-                const [datepicker0, datepicker1] = this.datepickers;
-                const origDates = this.dates;
+                const {datepickers: [datepicker0, datepicker1], inputs: [input0, input1], dates: [origDate0, origDate1]} = this;
                 this._updating = true;
                 datepicker0.setDate(rangeStart);
                 datepicker1.setDate(rangeEnd);
                 delete this._updating;
-                if (datepicker1.dates[0] !== origDates[1]) onChangeDate(this, {
-                    target: this.inputs[1]
-                }); else if (datepicker0.dates[0] !== origDates[0]) onChangeDate(this, {
-                    target: this.inputs[0]
+                if (datepicker1.dates[0] !== origDate1) onChangeDate(this, {
+                    target: input1
+                }); else if (datepicker0.dates[0] !== origDate0) onChangeDate(this, {
+                    target: input0
                 });
             }
         }

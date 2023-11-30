@@ -10425,6 +10425,7 @@ input {
 input,
 button,
 textarea {
+  background: transparent;
   font-family: "Montserrat";
   font-size: inherit;
   outline: none;
@@ -10471,6 +10472,7 @@ h6 {
 }
 
 body {
+  background: white;
   overflow-x: hidden;
 }
 
