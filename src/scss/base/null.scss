@@ -8,13 +8,10 @@
 *:after {
   box-sizing: border-box;
 }
-:focus,
-:active {
-}
+
 a:focus,
 a:active {
   outline: none;
-  
 }
 html,
 body {
@@ -34,7 +31,6 @@ body {
   line-height: 1;
   font-family: $fontFamily;
   font-size: $fontSize;
-  //text-rendering: optimizeLegibility;
   -ms-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
@@ -46,9 +42,11 @@ label,
 input {
   user-select: none;
 }
+
 input,
 button,
 textarea {
+  background: transparent;
   font-family: $fontFamily;
   font-size: inherit;
   outline: none;
@@ -57,27 +55,34 @@ textarea {
   -moz-appearance: none;
   appearance: none;
 }
+
 button {
   cursor: pointer;
   color: inherit;
   background-color: inherit;
 }
+
 a {
   color: inherit;
 }
+
 a:link,
 a:visited {
   text-decoration: none;
 }
+
 a:hover {
   text-decoration: none;
 }
+
 ul li {
   list-style: none;
 }
+
 img {
   vertical-align: top;
 }
+
 h1,
 h2,
 h3,
