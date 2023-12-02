@@ -1,8 +1,8 @@
-# Test task for MetaLamp #1 - Toxin Hotel
+# Test task for MetaLamp - Toxin Hotel
 
 ## Deploy
 
-https://sophrona.github.io/V-ToxinHotel
+https://sophrona.github.io/T-ToxinHotel
 
 ## Project setup
 ```
