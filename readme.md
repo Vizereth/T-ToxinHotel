@@ -2,7 +2,7 @@
 
 ## Deploy
 
-https://sophrona.github.io/T-ToxinHotel
+https://vizereth.github.io/T-ToxinHotel
 
 ## Project setup
 ```
