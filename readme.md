@@ -1,8 +1,8 @@
-# Test task for MetaLamp - Toxin Hotel
+# Toxin Hotel
 
 ## Deploy
 
-https://vizereth.github.io/T-ToxinHotel
+https://vizereth.github.io/test-toxin-hotel
 
 ## Project setup
 ```
