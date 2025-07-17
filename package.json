@@ -1,5 +1,5 @@
 {
-	"homepage": "https://sophrona.github.io/T-ToxinHotel",
+	"homepage": "https://vizereth.github.io/test-toxin-hotel",
 	"name": "fls-start",
 	"version": "3.0.0",
 	"description": "Start template with Gulp and Webpack",
@@ -78,6 +78,7 @@
 		"webpack-stream": "latest"
 	},
 	"dependencies": {
+		"gh-pages": "^6.3.0",
 		"simplebar": "latest"
 	}
 }
